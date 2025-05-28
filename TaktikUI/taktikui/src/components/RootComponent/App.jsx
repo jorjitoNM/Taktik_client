@@ -8,7 +8,6 @@ function App() {
     <Router>
         <Routes>
           <Route path="/login" element={<LoginScreen />} />
-          <Route path="/register" element={<  RegisterScreen />} />
         </Routes>
     </Router>
   );
