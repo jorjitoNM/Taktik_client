@@ -1,7 +1,7 @@
 import React, { useState } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
-import logo from '../assets/Taktik.png';
-import avatar from '../assets/Avatar.png';
+import logo from '../../assets/Taktik.png';
+import avatar from '../../assets/Avatar.png';
 
 const HomeScreen = () => {
     const [projects, setProjects] = useState([]);
