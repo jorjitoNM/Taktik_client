@@ -1,4 +1,4 @@
-function ScrumProjectCreationButton({onClick }) {
+function UserStoryCreationButton({onClick }) {
     return (
         <>
             <button onClick={onClick}>Crear nuevo proyecto Scrum</button>
@@ -6,4 +6,4 @@ function ScrumProjectCreationButton({onClick }) {
     )
 }
 
-export default ScrumProjectCreationButton
+export default UserStoryCreationButton

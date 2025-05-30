@@ -1,6 +1,6 @@
 import { useEffect, useRef } from "react"
 
-function ScrumProjectCreationModal({ isOpened, onClose }) {
+function UserStoryCreationModal({ isOpened, onClose }) {
     const dialogRef = useRef(null)
 
     useEffect(() => {
@@ -23,4 +23,4 @@ function ScrumProjectCreationModal({ isOpened, onClose }) {
     )
 }
 
-export default ScrumProjectCreationModal
+export default UserStoryCreationModal
