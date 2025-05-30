@@ -1,7 +1,7 @@
 import React, { useState } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
-import logo from '../assets/Taktik.png';
-import avatar from '../assets/Avatar.png';
+import logo from '../../assets/Taktik.png';
+import avatar from '../../assets/Avatar.png';
 
 const HomeScreen = () => {
     const [projects, setProjects] = useState([]);
@@ -200,7 +200,8 @@ const HomeScreen = () => {
             <main style={{
                 maxWidth: '1200px',
                 margin: '0 auto',
-                padding: '40px 24px'
+                padding: '40px 24px',
+                marginBottom: '-20px'
             }}>
                 <div style={{
                     display: 'flex',
@@ -482,6 +483,7 @@ const HomeScreen = () => {
                                         onChange={handleInputChange}
                                         placeholder="Breve descripción del proyecto..."
                                         style={{
+                                            fontFamily: "'Poppins', sans-serif",
                                             width: '100%',
                                             padding: '12px 16px',
                                             borderRadius: '8px',
