@@ -1,6 +1,7 @@
 import React, { useState } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { useParams, useNavigate } from 'react-router-dom';
+import logo from '../../assets/Taktik.png';
 import avatar from '../../assets/Avatar.png';
 
 // Definición de colores
@@ -15,6 +16,8 @@ const colors = {
 const ProjectScreen = () => {
     const { projectName } = useParams();
     const navigate = useNavigate();
+    const [dropdownOpen, setDropdownOpen] = useState(false);
+
 
     const [showMemberModal, setShowMemberModal] = useState(false);
     const [newMember, setNewMember] = useState({
@@ -122,11 +125,15 @@ const ProjectScreen = () => {
                     padding: '0 15px'
                 }}>
                     <div style={{ display: 'flex', alignItems: 'center', gap: '12px' }}>
+                        <img
+                            src={logo}
+                            alt="Logo"
+                            style={{ width: '32px', height: '32px' }}
+                        />
                         <motion.div
                             whileHover={{ scale: 1.05 }}
-                            onClick={() => navigate('/project')}
                             style={{
-                                color: '#2F1C6A',
+                                color: colors.primary,
                                 fontWeight: '700',
                                 fontSize: '24px',
                                 cursor: 'pointer'
@@ -140,6 +147,7 @@ const ProjectScreen = () => {
                         <img
                             src={avatar}
                             alt="User"
+                            onClick={() => setDropdownOpen(!dropdownOpen)}
                             style={{
                                 width: '40px',
                                 height: '40px',
@@ -148,6 +156,90 @@ const ProjectScreen = () => {
                             }}
                         />
                     </div>
+                    <AnimatePresence>
+                        {dropdownOpen && (
+                            <motion.div
+                                initial={{ opacity: 0, y: 10 }}
+                                animate={{ opacity: 1, y: 0 }}
+                                exit={{ opacity: 0, y: 10 }}
+                                style={{
+                                    position: 'absolute',
+                                    right: 0,
+                                    top: '50px',
+                                    background: colors.white,
+                                    borderRadius: '8px',
+                                    boxShadow: '0 5px 20px rgba(0,0,0,0.1)',
+                                    minWidth: '200px',
+                                    overflow: 'hidden',
+                                    zIndex: 101
+                                }}
+                            >
+                                <div style={{ padding: '16px', borderBottom: `1px solid ${colors.border}` }}>
+                                    <div style={{ display: 'flex', gap: '12px', alignItems: 'center' }}>
+                                        <img
+                                            src={avatar}
+                                            alt="User"
+                                            style={{
+                                                width: '40px',
+                                                height: '40px',
+                                                borderRadius: '50%',
+                                                objectFit: 'cover'
+                                            }}
+                                        />
+                                        <div>
+                                            <div style={{
+                                                fontWeight: '600',
+                                                color: colors.text,
+                                                marginBottom: '4px'
+                                            }}>
+                                                Nombre
+                                            </div>
+                                            <div style={{
+                                                fontSize: '14px',
+                                                color: colors.lightText
+                                            }}>
+                                                usuario@email.com
+                                            </div>
+                                        </div>
+                                    </div>
+                                </div>
+                                <div style={{ padding: '8px 0' }}>
+                                    <motion.button
+                                        whileHover={{ background: colors.light }}
+                                        transition={{ type: 'tween', duration: 0.2 }}
+                                        style={{
+                                            width: '100%',
+                                            textAlign: 'left',
+                                            padding: '8px 16px',
+                                            background: 'none',
+                                            border: 'none',
+                                            cursor: 'pointer',
+                                            color: colors.text,
+                                            fontSize: '14px'
+                                        }}
+                                    >
+                                        Editar perfil
+                                    </motion.button>
+                                    <motion.button
+                                        whileHover={{ background: colors.light }}
+                                        transition={{ type: 'tween', duration: 0.2 }}
+                                        style={{
+                                            width: '100%',
+                                            textAlign: 'left',
+                                            padding: '8px 16px',
+                                            background: 'none',
+                                            border: 'none',
+                                            cursor: 'pointer',
+                                            color: colors.text,
+                                            fontSize: '14px'
+                                        }}
+                                    >
+                                        Cerrar sesión
+                                    </motion.button>
+                                </div>
+                            </motion.div>
+                        )}
+                    </AnimatePresence>
                 </div>
             </header>
 
