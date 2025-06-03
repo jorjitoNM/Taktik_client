@@ -18,7 +18,6 @@ const ProjectScreen = () => {
     const navigate = useNavigate();
     const [dropdownOpen, setDropdownOpen] = useState(false);
 
-
     const [showMemberModal, setShowMemberModal] = useState(false);
     const [newMember, setNewMember] = useState({
         name: '',
@@ -26,21 +25,33 @@ const ProjectScreen = () => {
         email: ''
     });
 
-    // Datos de las historias de usuario (sin estado)
-    const userStories = [
+    // Datos de las historias de usuario (con descripción)
+    const [userStories, setUserStories] = useState([
         {
             id: 1,
             title: 'Crear página de inicio',
+            description: 'Diseñar y desarrollar la página principal de la aplicación con los componentes básicos.',
+            tasks: [
+                { id: 1, title: 'Diseñar layout', completed: true },
+                { id: 2, title: 'Implementar navbar', completed: false },
+                { id: 3, title: 'Crear footer', completed: false }
+            ]
         },
         {
             id: 2,
             title: 'Implementar autenticación',
+            description: 'Configurar sistema de autenticación con JWT y roles de usuario.',
+            tasks: [
+                { id: 1, title: 'Configurar backend para JWT', completed: true }
+            ]
         },
         {
             id: 3,
             title: 'Diseñar base de datos',
+            description: 'Crear el esquema de la base de datos y las relaciones entre entidades.',
+            tasks: [] // Historia sin tareas
         }
-    ];
+    ]);
 
     // Datos de los miembros del proyecto
     const [members, setMembers] = useState([
@@ -57,9 +68,11 @@ const ProjectScreen = () => {
     // Estados para los modales
     const [showEditModal, setShowEditModal] = useState(false);
     const [showDeleteModal, setShowDeleteModal] = useState(false);
+    const [showTasksModal, setShowTasksModal] = useState(false);
     const [currentStory, setCurrentStory] = useState(null);
     const [editedData, setEditedData] = useState({
         title: '',
+        description: ''
     });
 
     // Función para manejar la selección de historia
@@ -73,6 +86,7 @@ const ProjectScreen = () => {
         setCurrentStory(story);
         setEditedData({
             title: story.title,
+            description: story.description
         });
         setShowEditModal(true);
     };
@@ -84,19 +98,30 @@ const ProjectScreen = () => {
         setShowDeleteModal(true);
     };
 
+    // Función para abrir el modal de tareas
+    const openTasksModal = (story, e) => {
+        e.stopPropagation();
+        setCurrentStory(story);
+        setShowTasksModal(true);
+    };
+
     // Función para guardar los cambios de edición
     const handleSaveEdit = () => {
-        // En una implementación real, aquí actualizarías los datos
-        alert(`Historia "${currentStory.title}" actualizada a:
-        Título: ${editedData.title}`);
+        // Actualizar la historia en el estado
+        setUserStories(userStories.map(story => 
+            story.id === currentStory.id 
+                ? { ...story, title: editedData.title, description: editedData.description } 
+                : story
+        ));
+        
         setShowEditModal(false);
         setSelectedStory(null);
     };
 
     // Función para confirmar borrado
     const confirmDelete = () => {
-        // En una implementación real, aquí borrarías la historia
-        alert(`Historia "${currentStory.title}" borrada`);
+        // Eliminar la historia del estado
+        setUserStories(userStories.filter(story => story.id !== currentStory.id));
         setShowDeleteModal(false);
         setSelectedStory(null);
     };
@@ -349,69 +374,119 @@ const ProjectScreen = () => {
                                                         transition={{ duration: 0.2 }}
                                                         style={{
                                                             overflow: 'hidden',
-                                                            paddingTop: '12px',
-                                                            display: 'flex',
-                                                            justifyContent: 'flex-end',
-                                                            gap: '8px'
+                                                            paddingTop: '12px'
                                                         }}
                                                     >
-                                                        <button
-                                                            onClick={(e) => openEditModal(story, e)}
-                                                            style={{
-                                                                background: '#ddeeff',
-                                                                border: 'none',
-                                                                borderRadius: '50%',
-                                                                padding: '3px 5px',
-                                                                fontSize: '14px',
-                                                                color: '#673DE6',
-                                                                cursor: 'pointer'
-                                                            }}
-                                                        >
-                                                            <svg
-                                                                xmlns="http://www.w3.org/2000/svg"
-                                                                viewBox="0 0 21 21"
-                                                                width="1.35em"
-                                                                height="1.35em"
-                                                                style={{ paddingRight: '1px' }}
+                                                        <div style={{
+                                                            color: colors.lightText,
+                                                            fontSize: '14px',
+                                                            marginBottom: '12px'
+                                                        }}>
+                                                            {story.description}
+                                                        </div>
+                                                        
+                                                        <div style={{
+                                                            display: 'flex',
+                                                            justifyContent: 'space-between',
+                                                            alignItems: 'center'
+                                                        }}>
+                                                            <motion.button
+                                                                whileHover={{ scale: 1.05 }}
+                                                                whileTap={{ scale: 0.98 }}
+                                                                onClick={(e) => openTasksModal(story, e)}
+                                                                style={{
+                                                                    background: '#f0f0f0',
+                                                                    border: 'none',
+                                                                    borderRadius: '8px',
+                                                                    padding: '6px 12px',
+                                                                    fontSize: '12px',
+                                                                    color: colors.text,
+                                                                    cursor: 'pointer',
+                                                                    display: 'flex',
+                                                                    alignItems: 'center',
+                                                                    gap: '4px'
+                                                                }}
                                                             >
-                                                                <path
-                                                                    fill="currentColor"
-                                                                    d="M13.249 8.837a.75.75 0 0 1 .274 1.025l-3.07 5.32a.75.75 0 1 1-1.3-.75l3.072-5.32a.75.75 0 0 1 1.024-.275"
-                                                                ></path>
-                                                                <path
-                                                                    fill="currentColor"
-                                                                    fillRule="evenodd"
-                                                                    d="m16.788 9.877l1.117-1.934a2.58 2.58 0 0 0-.276-2.966a5.62 5.62 0 0 0-3.227-1.863a2.58 2.58 0 0 0-2.706 1.244l-1.118 1.937l-.013.021l-3.922 6.794c-.272.47-.45.777-.577 1.108a4.5 4.5 0 0 0-.245.908c-.056.35-.057.704-.06 1.247l-.011 2.973v.067c0 .132.003.259.013.37c.014.161.05.415.218.645c.204.282.518.463.864.5c.284.029.521-.066.669-.135c.144-.067.31-.164.477-.261l1.643-.957l.007-.004l.826-.482c.469-.273.775-.451 1.05-.675q.367-.299.664-.666c.222-.276.4-.583.67-1.053l3.922-6.791zm-1.533-.344a4.94 4.94 0 0 0-3.611-2.085L7.97 13.809c-.31.538-.425.74-.505.948q-.113.295-.164.607c-.035.22-.038.452-.04 1.073l-.001.121a3.17 3.17 0 0 1 2.295 1.326l.105-.061c.537-.313.736-.431.909-.572q.245-.2.444-.446c.14-.173.258-.373.568-.91z"
-                                                                    clipRule="evenodd"
-                                                                ></path>
-                                                            </svg>
-                                                        </button>
-                                                        <button
-                                                            onClick={(e) => openDeleteModal(story, e)}
-                                                            style={{
-                                                                background: '#ffdddd',
-                                                                border: 'none',
-                                                                borderRadius: '50%',
-                                                                padding: '3px 5.5px',
-                                                                fontSize: '14px',
-                                                                color: 'red',
-                                                                cursor: 'pointer'
-                                                            }}
-                                                        >
-                                                            <svg
-                                                                xmlns="http://www.w3.org/2000/svg"
-                                                                viewBox="0 0 24 24"
-                                                                width="1.3em"
-                                                                height="1.3em"
-                                                                style={{ marginTop: "1.5px" }}
-                                                            >
-                                                                <path
-                                                                    fill="currentColor"
-                                                                    fillRule="evenodd"
-                                                                    d="m18.412 6.5l-.801 13.617A2 2 0 0 1 15.614 22H8.386a2 2 0 0 1-1.997-1.883L5.59 6.5H3.5v-1A.5.5 0 0 1 4 5h16a.5.5 0 0 1 .5.5v1zM10 2.5h4a.5.5 0 0 1 .5.5v1h-5V3a.5.5 0 0 1 .5-.5M9 9l.5 9H11l-.4-9zm4.5 0l-.5 9h1.5l.5-9z"
-                                                                ></path>
-                                                            </svg>
-                                                        </button>
+                                                                <svg
+                                                                    xmlns="http://www.w3.org/2000/svg"
+                                                                    viewBox="0 0 24 24"
+                                                                    width="1em"
+                                                                    height="1em"
+                                                                    fill="none"
+                                                                    stroke="currentColor"
+                                                                    strokeWidth="2"
+                                                                    strokeLinecap="round"
+                                                                    strokeLinejoin="round"
+                                                                >
+                                                                    <path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"></path>
+                                                                    <polyline points="14 2 14 8 20 8"></polyline>
+                                                                    <line x1="16" y1="13" x2="8" y2="13"></line>
+                                                                    <line x1="16" y1="17" x2="8" y2="17"></line>
+                                                                    <polyline points="10 9 9 9 8 9"></polyline>
+                                                                </svg>
+                                                                Tareas ({story.tasks.length})
+                                                            </motion.button>
+                                                            
+                                                            <div style={{ display: 'flex', gap: '8px' }}>
+                                                                <button
+                                                                    onClick={(e) => openEditModal(story, e)}
+                                                                    style={{
+                                                                        background: '#ddeeff',
+                                                                        border: 'none',
+                                                                        borderRadius: '50%',
+                                                                        padding: '3px 5px',
+                                                                        fontSize: '14px',
+                                                                        color: '#673DE6',
+                                                                        cursor: 'pointer'
+                                                                    }}
+                                                                >
+                                                                    <svg
+                                                                        xmlns="http://www.w3.org/2000/svg"
+                                                                        viewBox="0 0 21 21"
+                                                                        width="1.35em"
+                                                                        height="1.35em"
+                                                                        style={{ paddingRight: '1px' }}
+                                                                    >
+                                                                        <path
+                                                                            fill="currentColor"
+                                                                            d="M13.249 8.837a.75.75 0 0 1 .274 1.025l-3.07 5.32a.75.75 0 1 1-1.3-.75l3.072-5.32a.75.75 0 0 1 1.024-.275"
+                                                                        ></path>
+                                                                        <path
+                                                                            fill="currentColor"
+                                                                            fillRule="evenodd"
+                                                                            d="m16.788 9.877l1.117-1.934a2.58 2.58 0 0 0-.276-2.966a5.62 5.62 0 0 0-3.227-1.863a2.58 2.58 0 0 0-2.706 1.244l-1.118 1.937l-.013.021l-3.922 6.794c-.272.47-.45.777-.577 1.108a4.5 4.5 0 0 0-.245.908c-.056.35-.057.704-.06 1.247l-.011 2.973v.067c0 .132.003.259.013.37c.014.161.05.415.218.645c.204.282.518.463.864.5c.284.029.521-.066.669-.135c.144-.067.31-.164.477-.261l1.643-.957l.007-.004l.826-.482c.469-.273.775-.451 1.05-.675q.367-.299.664-.666c.222-.276.4-.583.67-1.053l3.922-6.791zm-1.533-.344a4.94 4.94 0 0 0-3.611-2.085L7.97 13.809c-.31.538-.425.74-.505.948q-.113.295-.164.607c-.035.22-.038.452-.04 1.073l-.001.121a3.17 3.17 0 0 1 2.295 1.326l.105-.061c.537-.313.736-.431.909-.572q.245-.2.444-.446c.14-.173.258-.373.568-.91z"
+                                                                            clipRule="evenodd"
+                                                                        ></path>
+                                                                    </svg>
+                                                                </button>
+                                                                <button
+                                                                    onClick={(e) => openDeleteModal(story, e)}
+                                                                    style={{
+                                                                        background: '#ffdddd',
+                                                                        border: 'none',
+                                                                        borderRadius: '50%',
+                                                                        padding: '3px 5.5px',
+                                                                        fontSize: '14px',
+                                                                        color: 'red',
+                                                                        cursor: 'pointer'
+                                                                    }}
+                                                                >
+                                                                    <svg
+                                                                        xmlns="http://www.w3.org/2000/svg"
+                                                                        viewBox="0 0 24 24"
+                                                                        width="1.3em"
+                                                                        height="1.3em"
+                                                                        style={{ marginTop: "1.5px" }}
+                                                                    >
+                                                                        <path
+                                                                            fill="currentColor"
+                                                                            fillRule="evenodd"
+                                                                            d="m18.412 6.5l-.801 13.617A2 2 0 0 1 15.614 22H8.386a2 2 0 0 1-1.997-1.883L5.59 6.5H3.5v-1A.5.5 0 0 1 4 5h16a.5.5 0 0 1 .5.5v1zM10 2.5h4a.5.5 0 0 1 .5.5v1h-5V3a.5.5 0 0 1 .5-.5M9 9l.5 9H11l-.4-9zm4.5 0l-.5 9h1.5l.5-9z"
+                                                                        ></path>
+                                                                    </svg>
+                                                                </button>
+                                                            </div>
+                                                        </div>
                                                     </motion.div>
                                                 )}
                                             </AnimatePresence>
@@ -786,6 +861,27 @@ const ProjectScreen = () => {
                             />
                         </div>
 
+                        <div style={{ marginBottom: '16px' }}>
+                            <label style={{
+                                display: 'block',
+                                marginBottom: '8px',
+                                color: '#2E2E48',
+                                fontWeight: '500'
+                            }}>Descripción</label>
+                            <textarea
+                                value={editedData.description}
+                                onChange={(e) => setEditedData({ ...editedData, description: e.target.value })}
+                                style={{
+                                    width: '95%',
+                                    padding: '12px',
+                                    borderRadius: '8px',
+                                    border: '1px solid #E5E5ED',
+                                    fontSize: '14px',
+                                    minHeight: '100px'
+                                }}
+                            />
+                        </div>
+
                         <div style={{
                             display: 'flex',
                             justifyContent: 'flex-end',
@@ -911,6 +1007,115 @@ const ProjectScreen = () => {
                                 }}
                             >
                                 Borrar
+                            </motion.button>
+                        </div>
+                    </motion.div>
+                </motion.div>
+            )}
+
+            {/* Modal de tareas */}
+            {showTasksModal && (
+                <motion.div
+                    initial={{ opacity: 0 }}
+                    animate={{ opacity: 1 }}
+                    exit={{ opacity: 0 }}
+                    style={{
+                        position: 'fixed',
+                        top: 0,
+                        left: 0,
+                        right: 0,
+                        bottom: 0,
+                        backgroundColor: 'rgba(0,0,0,0.5)',
+                        display: 'flex',
+                        alignItems: 'center',
+                        justifyContent: 'center',
+                        zIndex: 1000
+                    }}
+                >
+                    <motion.div
+                        initial={{ scale: 0.9, y: 20 }}
+                        animate={{ scale: 1, y: 0 }}
+                        transition={{ type: 'spring', damping: 10 }}
+                        style={{
+                            backgroundColor: '#FFFFFF',
+                            padding: '24px',
+                            borderRadius: '12px',
+                            maxWidth: '500px',
+                            width: '90%',
+                            boxShadow: '0 10px 25px rgba(0,0,0,0.1)'
+                        }}
+                    >
+                        <h3 style={{
+                            color: '#2E2E48',
+                            fontSize: '20px',
+                            fontWeight: '600',
+                            marginBottom: '20px'
+                        }}>
+                            Tareas: {currentStory?.title}
+                        </h3>
+
+                        {currentStory?.tasks.length > 0 ? (
+                            <div style={{ marginBottom: '20px' }}>
+                                {currentStory.tasks.map(task => (
+                                    <div key={task.id} style={{
+                                        display: 'flex',
+                                        alignItems: 'center',
+                                        gap: '12px',
+                                        padding: '12px',
+                                        borderBottom: `1px solid ${colors.border}`,
+                                        background: task.completed ? '#f0fff0' : 'transparent'
+                                    }}>
+                                        <input
+                                            type="checkbox"
+                                            checked={task.completed}
+                                            onChange={() => {}}
+                                            style={{
+                                                width: '18px',
+                                                height: '18px',
+                                                cursor: 'pointer'
+                                            }}
+                                        />
+                                        <span style={{
+                                            textDecoration: task.completed ? 'line-through' : 'none',
+                                            color: task.completed ? colors.lightText : colors.text,
+                                            flex: 1
+                                        }}>
+                                            {task.title}
+                                        </span>
+                                    </div>
+                                ))}
+                            </div>
+                        ) : (
+                            <div style={{
+                                textAlign: 'center',
+                                padding: '20px',
+                                color: colors.lightText,
+                                marginBottom: '20px'
+                            }}>
+                                No hay tareas asignadas a esta historia de usuario.
+                            </div>
+                        )}
+
+                        <div style={{
+                            display: 'flex',
+                            justifyContent: 'flex-end',
+                            gap: '12px'
+                        }}>
+                            <motion.button
+                                whileHover={{ scale: 1.02 }}
+                                whileTap={{ scale: 0.98 }}
+                                onClick={() => setShowTasksModal(false)}
+                                style={{
+                                    background: '#F5F5F9',
+                                    border: 'none',
+                                    borderRadius: '8px',
+                                    padding: '10px 20px',
+                                    fontSize: '14px',
+                                    color: '#2E2E48',
+                                    cursor: 'pointer'
+                                }}
+                            >
+                                Cerrar
                             </motion.button>
                         </div>
                     </motion.div>
