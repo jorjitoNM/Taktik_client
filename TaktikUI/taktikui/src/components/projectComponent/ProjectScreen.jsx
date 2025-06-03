@@ -108,12 +108,12 @@ const ProjectScreen = () => {
     // Función para guardar los cambios de edición
     const handleSaveEdit = () => {
         // Actualizar la historia en el estado
-        setUserStories(userStories.map(story => 
-            story.id === currentStory.id 
-                ? { ...story, title: editedData.title, description: editedData.description } 
+        setUserStories(userStories.map(story =>
+            story.id === currentStory.id
+                ? { ...story, title: editedData.title, description: editedData.description }
                 : story
         ));
-        
+
         setShowEditModal(false);
         setSelectedStory(null);
     };
@@ -384,49 +384,46 @@ const ProjectScreen = () => {
                                                         }}>
                                                             {story.description}
                                                         </div>
-                                                        
+
                                                         <div style={{
                                                             display: 'flex',
                                                             justifyContent: 'space-between',
                                                             alignItems: 'center'
                                                         }}>
                                                             <motion.button
-                                                                whileHover={{ scale: 1.05 }}
+                                                                whileHover={{ background: '#4520b6' }}
                                                                 whileTap={{ scale: 0.98 }}
                                                                 onClick={(e) => openTasksModal(story, e)}
                                                                 style={{
-                                                                    background: '#f0f0f0',
+                                                                    background: '#673DE6',
                                                                     border: 'none',
                                                                     borderRadius: '8px',
                                                                     padding: '6px 12px',
                                                                     fontSize: '12px',
-                                                                    color: colors.text,
+                                                                    color: "white",
                                                                     cursor: 'pointer',
                                                                     display: 'flex',
                                                                     alignItems: 'center',
                                                                     gap: '4px'
+
                                                                 }}
                                                             >
                                                                 <svg
                                                                     xmlns="http://www.w3.org/2000/svg"
-                                                                    viewBox="0 0 24 24"
+                                                                    viewBox="0 0 14 14"
                                                                     width="1em"
                                                                     height="1em"
-                                                                    fill="none"
-                                                                    stroke="currentColor"
-                                                                    strokeWidth="2"
-                                                                    strokeLinecap="round"
-                                                                    strokeLinejoin="round"
                                                                 >
-                                                                    <path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"></path>
-                                                                    <polyline points="14 2 14 8 20 8"></polyline>
-                                                                    <line x1="16" y1="13" x2="8" y2="13"></line>
-                                                                    <line x1="16" y1="17" x2="8" y2="17"></line>
-                                                                    <polyline points="10 9 9 9 8 9"></polyline>
+                                                                    <path
+                                                                        fill="currentColor"
+                                                                        fillRule="evenodd"
+                                                                        d="M.658.44A1.5 1.5 0 0 1 1.718 0h5.587a1.5 1.5 0 0 1 1.06.44l3.414 3.414a1.5 1.5 0 0 1 .44 1.06V12.5a1.5 1.5 0 0 1-1.5 1.5h-9a1.5 1.5 0 0 1-1.5-1.5v-11c0-.398.158-.78.44-1.06ZM5.33 4.527a.75.75 0 0 1 .175 1.047L4.108 7.53a.75.75 0 0 1-1.14.094l-.838-.838a.75.75 0 0 1 1.06-1.06l.212.211l.882-1.234a.75.75 0 0 1 1.046-.175Zm.95 1.847a.75.75 0 0 1 .75-.75h2.5a.75.75 0 0 1 0 1.5h-2.5a.75.75 0 0 1-.75-.75m0 3.969a.75.75 0 0 1 .75-.75h2.5a.75.75 0 0 1 0 1.5h-2.5a.75.75 0 0 1-.75-.75m-.775-.738a.75.75 0 1 0-1.22-.872l-.883 1.235l-.212-.212a.75.75 0 0 0-1.06 1.06l.838.838a.75.75 0 0 0 1.14-.094z"
+                                                                        clipRule="evenodd"
+                                                                    ></path>
                                                                 </svg>
                                                                 Tareas ({story.tasks.length})
                                                             </motion.button>
-                                                            
+
                                                             <div style={{ display: 'flex', gap: '8px' }}>
                                                                 <button
                                                                     onClick={(e) => openEditModal(story, e)}
@@ -1068,7 +1065,7 @@ const ProjectScreen = () => {
                                         <input
                                             type="checkbox"
                                             checked={task.completed}
-                                            onChange={() => {}}
+                                            onChange={() => { }}
                                             style={{
                                                 width: '18px',
                                                 height: '18px',
