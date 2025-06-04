@@ -1,7 +1,8 @@
-import React, { useState } from 'react';
+import React, { useEffect, useState } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import logo from '../../assets/Taktik.png';
 import avatar from '../../assets/Avatar.png';
+import { getProjects } from '../service/api.js';
 
 const HomeScreen = () => {
     const [projects, setProjects] = useState([]);
@@ -42,6 +43,18 @@ const HomeScreen = () => {
         const { name, value } = e.target;
         setNewProject(prev => ({ ...prev, [name]: value }));
     };
+
+    useEffect(() => {
+        const fetchProjects = async () => {
+            try {
+                const fetchedProjects = await getProjects();
+                setProjects(fetchedProjects || [])
+            } catch (error) {
+                console.log(error)
+            }
+        }
+        fetchProjects();
+    }, []);
 
     return (
         <div style={{
