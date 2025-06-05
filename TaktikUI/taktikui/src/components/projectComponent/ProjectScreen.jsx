@@ -4,7 +4,6 @@ import { useParams, useNavigate } from 'react-router-dom';
 import logo from '../../assets/Taktik.png';
 import avatar from '../../assets/Avatar.png';
 
-// Definición de colores
 const colors = {
     white: '#FFFFFF',
     text: '#2E2E48',
@@ -535,7 +534,6 @@ const ProjectScreen = () => {
                     </motion.button>
                 </div>
 
-                {/* Botón de creación y título */}
                 <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: '16px' }}>
                     <h2 style={{ color: '#2E2E48', fontSize: '20px', fontWeight: '600' }}>
                         {activeTab === 'backlog' ? 'Historias de Usuario' : 'Sprints'}
@@ -559,7 +557,6 @@ const ProjectScreen = () => {
                     </motion.button>
                 </div>
 
-                {/* Contenido de las pestañas */}
                 <div style={{ display: 'flex', gap: '24px' }}>
                     {/* Columna principal (Backlog o Sprints) */}
                     <div style={{ flex: 3 }}>
