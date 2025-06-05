@@ -579,7 +579,7 @@ const ProjectScreen = () => {
                                                 whileHover={{ y: -2 }}
                                                 onClick={() => setShowCreateStoryModal(true)}
                                                 style={{
-                                                    background: '#FFFFFF',
+                                                    background: 'rgb(232, 226, 255)',
                                                     borderRadius: '8px',
                                                     padding: '16px',
                                                     marginBottom: '12px',
@@ -599,9 +599,12 @@ const ProjectScreen = () => {
                                                     height="20"
                                                     fill={colors.secondary}
                                                 >
-                                                    <path d="M12 4a1 1 0 0 1 1 1v6h6a1 1 0 1 1 0 2h-6v6a1 1 0 1 1-2 0v-6H5a1 1 0 1 1 0-2h6V5a1 1 0 0 1 1-1z" />
+                                                    <path
+                                                        fill={colors.secondary}
+                                                        d="M18 13h-5v5c0 .55-.45 1-1 1s-1-.45-1-1v-5H6c-.55 0-1-.45-1-1s.45-1 1-1h5V6c0-.55.45-1 1-1s1 .45 1 1v5h5c.55 0 1 .45 1 1s-.45 1-1 1"
+                                                    ></path>
                                                 </svg>
-                                                <span style={{ color: colors.secondary, fontWeight: '500' }}>
+                                                <span style={{ color: colors.secondary, fontWeight: 'bold' }}>
                                                     Crear nueva historia
                                                 </span>
                                             </motion.div>
@@ -832,7 +835,7 @@ const ProjectScreen = () => {
                                                 whileHover={{ y: -2 }}
                                                 onClick={() => setShowCreateSprintModal(true)}
                                                 style={{
-                                                    background: '#FFFFFF',
+                                                    background: 'rgb(232, 226, 255)',
                                                     borderRadius: '8px',
                                                     padding: '16px',
                                                     marginBottom: '12px',
@@ -852,9 +855,12 @@ const ProjectScreen = () => {
                                                     height="20"
                                                     fill={colors.secondary}
                                                 >
-                                                    <path d="M12 4a1 1 0 0 1 1 1v6h6a1 1 0 1 1 0 2h-6v6a1 1 0 1 1-2 0v-6H5a1 1 0 1 1 0-2h6V5a1 1 0 0 1 1-1z" />
+                                                    <path
+                                                        fill={colors.secondary}
+                                                        d="M18 13h-5v5c0 .55-.45 1-1 1s-1-.45-1-1v-5H6c-.55 0-1-.45-1-1s.45-1 1-1h5V6c0-.55.45-1 1-1s1 .45 1 1v5h5c.55 0 1 .45 1 1s-.45 1-1 1"
+                                                    ></path>
                                                 </svg>
-                                                <span style={{ color: colors.secondary, fontWeight: '500' }}>
+                                                <span style={{ color: colors.secondary, fontWeight: 'bold' }}>
                                                     Crear nuevo sprint
                                                 </span>
                                             </motion.div>
@@ -894,13 +900,14 @@ const ProjectScreen = () => {
                                                                     overflow: 'hidden',
                                                                     paddingTop: '12px',
                                                                     display: 'flex',
-                                                                    justifyContent: 'space-between'
+                                                                    justifyContent: 'space-between',
+                                                                    alignItems: 'center'
                                                                 }}
                                                             >
                                                                 <div style={{
                                                                     color: colors.lightText,
                                                                     fontSize: '14px',
-                                                                    marginBottom: '12px'
+                                                                    marginTop: '8px'
                                                                 }}>
                                                                     {new Date(sprint.startDate).toLocaleDateString()} - {new Date(sprint.endDate).toLocaleDateString()}
                                                                 </div>
