@@ -25,3 +25,14 @@ export const addProject = async (projectData) => {
         throw error;
     }
 };
+
+export const getProject = async (projectId) => {
+    try {
+        const response = await axios.get(`http://localhost:8080/api/1.0/project/${projectId}/get`);
+        console.log(response.data);
+        return response.data;
+    } catch (error) {
+        console.error(error);
+        throw error;
+    }
+}

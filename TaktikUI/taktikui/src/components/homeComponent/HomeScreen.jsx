@@ -1,5 +1,6 @@
 import React, { useEffect, useState } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
+import { useNavigate } from 'react-router-dom';
 import logo from '../../assets/Taktik.png';
 import avatar from '../../assets/Avatar.png';
 import { getProjects, addProject } from '../service/apiHome.js';
@@ -23,6 +24,11 @@ const HomeScreen = () => {
         lightText: '#6D6D80',
         white: '#FFFFFF',
         border: '#E5E5ED'
+    };
+
+    const navigate = useNavigate();
+    const handleProjectClick = (projectId) => {
+        navigate(`/projects/${projectId}`);
     };
 
     const [isCreating, setIsCreating] = useState(false);
@@ -311,6 +317,7 @@ const HomeScreen = () => {
                                 key={project.id}
                                 whileHover={{ y: -5 }}
                                 whileTap={{ scale: 0.98 }}
+                                onClick={() => handleProjectClick(project.id)}
                                 style={{
                                     background: colors.white,
                                     borderRadius: '12px',
