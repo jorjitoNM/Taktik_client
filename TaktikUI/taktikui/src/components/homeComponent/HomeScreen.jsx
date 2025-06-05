@@ -2,7 +2,7 @@ import React, { useEffect, useState } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import logo from '../../assets/Taktik.png';
 import avatar from '../../assets/Avatar.png';
-import { getProjects } from '../service/api.js';
+import { getProjects, addProject } from '../service/apiHome.js';
 
 const HomeScreen = () => {
     const [projects, setProjects] = useState([]);
@@ -25,18 +25,26 @@ const HomeScreen = () => {
         border: '#E5E5ED'
     };
 
-    const handleCreateProject = () => {
-        if (!newProject.name.trim()) return;
+    const [isCreating, setIsCreating] = useState(false);
 
-        const project = {
-            id: projects.length + 1,
-            name: newProject.name,
-            description: newProject.description
-        };
+    const handleCreateProject = async () => {
+        if (!newProject.name.trim() || isCreating) return;
 
-        setProjects([...projects, project]);
-        setNewProject({ name: '', description: '' });
-        setShowCreateModal(false);
+        setIsCreating(true);
+        try {
+            const createdProject = await addProject({
+                name: newProject.name,
+                description: newProject.description
+            });
+
+            setProjects([...projects, createdProject]);
+            setNewProject({ name: '', description: '' });
+            setShowCreateModal(false);
+        } catch (error) {
+            console.error("Error al crear proyecto:", error);
+        } finally {
+            setIsCreating(false);
+        }
     };
 
     const handleInputChange = (e) => {
@@ -48,9 +56,9 @@ const HomeScreen = () => {
         const fetchProjects = async () => {
             try {
                 const fetchedProjects = await getProjects();
-                setProjects(fetchedProjects || [])
+                setProjects(fetchedProjects || []);
             } catch (error) {
-                console.log(error)
+                console.error("Error al cargar proyectos:", error);
             }
         }
         fetchProjects();
@@ -230,10 +238,7 @@ const HomeScreen = () => {
                     }}>Mis Proyectos</h1>
 
                     <motion.button
-                        whileHover={{
-                            y: -2,
-                            boxShadow: '0 4px 12px rgba(103, 61, 230, 0.2)'
-                        }}
+                        whileHover={{ boxShadow: "0px 0px 15px rgba(103, 61, 230, 0.7)" }}
                         whileTap={{ scale: 0.98 }}
                         onClick={() => setShowCreateModal(true)}
                         style={{
@@ -249,8 +254,11 @@ const HomeScreen = () => {
                             gap: '8px'
                         }}
                     >
-                        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
-                            <path d="M12 4V20M4 12H20" stroke="currentColor" strokeWidth="2" strokeLinecap="round" />
+                        <svg width="18" height="18" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+                            <path
+                                fill="currentColor"
+                                d="M18 13h-5v5c0 .55-.45 1-1 1s-1-.45-1-1v-5H6c-.55 0-1-.45-1-1s.45-1 1-1h5V6c0-.55.45-1 1-1s1 .45 1 1v5h5c.55 0 1 .45 1 1s-.45 1-1 1"
+                            ></path>
                         </svg>
                         Nuevo Proyecto
                     </motion.button>
@@ -543,7 +551,7 @@ const HomeScreen = () => {
                                     }}
                                     whileTap={{ scale: 0.98 }}
                                     onClick={handleCreateProject}
-                                    disabled={!newProject.name.trim()}
+                                    disabled={!newProject.name.trim() || isCreating}
                                     style={{
                                         background: colors.secondary,
                                         color: colors.white,
@@ -551,12 +559,12 @@ const HomeScreen = () => {
                                         borderRadius: '8px',
                                         padding: '10px 20px',
                                         fontWeight: '500',
-                                        cursor: newProject.name.trim() ? 'pointer' : 'not-allowed',
-                                        opacity: newProject.name.trim() ? 1 : 0.7,
+                                        cursor: newProject.name.trim() && !isCreating ? 'pointer' : 'not-allowed',
+                                        opacity: newProject.name.trim() && !isCreating ? 1 : 0.7,
                                         fontSize: '14px'
                                     }}
                                 >
-                                    Crear proyecto
+                                    {isCreating ? 'Creando...' : 'Crear proyecto'}
                                 </motion.button>
                             </div>
                         </motion.div>
