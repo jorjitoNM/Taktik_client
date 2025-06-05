@@ -892,7 +892,9 @@ const ProjectScreen = () => {
                                                                 transition={{ duration: 0.2 }}
                                                                 style={{
                                                                     overflow: 'hidden',
-                                                                    paddingTop: '12px'
+                                                                    paddingTop: '12px',
+                                                                    display: 'flex',
+                                                                    justifyContent: 'space-between'
                                                                 }}
                                                             >
                                                                 <div style={{
