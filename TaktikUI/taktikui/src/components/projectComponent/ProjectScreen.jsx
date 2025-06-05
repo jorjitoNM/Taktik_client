@@ -31,16 +31,16 @@ const ProjectScreen = () => {
         email: ''
     });
 
-    // Datos de las historias de usuario (con descripción)
+    // Datos de las historias de usuario (sin completed en tasks)
     const [userStories, setUserStories] = useState([
         {
             id: 1,
             title: 'Crear página de inicio',
             description: 'Diseñar y desarrollar la página principal de la aplicación con los componentes básicos.',
             tasks: [
-                { id: 1, title: 'Diseñar layout', completed: true },
-                { id: 2, title: 'Implementar navbar', completed: false },
-                { id: 3, title: 'Crear footer', completed: false }
+                { id: 1, title: 'Diseñar layout' },
+                { id: 2, title: 'Implementar navbar' },
+                { id: 3, title: 'Crear footer' }
             ]
         },
         {
@@ -48,14 +48,14 @@ const ProjectScreen = () => {
             title: 'Implementar autenticación',
             description: 'Configurar sistema de autenticación con JWT y roles de usuario.',
             tasks: [
-                { id: 1, title: 'Configurar backend para JWT', completed: true }
+                { id: 1, title: 'Configurar backend para JWT' }
             ]
         },
         {
             id: 3,
             title: 'Diseñar base de datos',
             description: 'Crear el esquema de la base de datos y las relaciones entre entidades.',
-            tasks: [] // Historia sin tareas
+            tasks: []
         }
     ]);
 
@@ -79,6 +79,32 @@ const ProjectScreen = () => {
     const [editedData, setEditedData] = useState({
         title: '',
         description: ''
+    });
+
+    // Estados para creación
+    const [showCreateStoryModal, setShowCreateStoryModal] = useState(false);
+    const [showCreateSprintModal, setShowCreateSprintModal] = useState(false);
+    const [sprints, setSprints] = useState([]);
+    const [newStory, setNewStory] = useState({
+        title: '',
+        description: '',
+        tasks: []
+    });
+    const [storyErrors, setStoryErrors] = useState({
+        title: '',
+        description: ''
+    });
+
+    // Estados para creación de sprints
+    const [newSprint, setNewSprint] = useState({
+        name: '',
+        startDate: '',
+        endDate: ''
+    });
+    const [sprintErrors, setSprintErrors] = useState({
+        name: '',
+        startDate: '',
+        endDate: ''
     });
 
     const validateFields = () => {
@@ -109,6 +135,109 @@ const ProjectScreen = () => {
 
         setErrors(newErrors);
         return valid;
+    };
+
+    const validateStory = () => {
+        let valid = true;
+        const errors = {
+            title: '',
+            description: ''
+        };
+
+        if (!newStory.title.trim()) {
+            errors.title = 'El título es obligatorio';
+            valid = false;
+        }
+
+        if (!newStory.description.trim()) {
+            errors.description = 'La descripción es obligatoria';
+            valid = false;
+        }
+
+        setStoryErrors(errors);
+        return valid;
+    };
+
+    const validateSprint = () => {
+        let valid = true;
+        const errors = {
+            name: '',
+            startDate: '',
+            endDate: ''
+        };
+
+        if (!newSprint.name.trim()) {
+            errors.name = 'El nombre es obligatorio';
+            valid = false;
+        }
+
+        if (!newSprint.startDate) {
+            errors.startDate = 'La fecha de inicio es obligatoria';
+            valid = false;
+        }
+
+        if (!newSprint.endDate) {
+            errors.endDate = 'La fecha de fin es obligatoria';
+            valid = false;
+        } else if (newSprint.startDate && new Date(newSprint.endDate) < new Date(newSprint.startDate)) {
+            errors.endDate = 'La fecha de fin debe ser posterior a la de inicio';
+            valid = false;
+        }
+
+        setSprintErrors(errors);
+        return valid;
+    };
+
+    const [selectedSprint, setSelectedSprint] = useState(null);
+    const [showEditSprintModal, setShowEditSprintModal] = useState(false);
+    const [showDeleteSprintModal, setShowDeleteSprintModal] = useState(false);
+    const [currentSprint, setCurrentSprint] = useState(null);
+    const [editedSprintData, setEditedSprintData] = useState({
+        name: '',
+        startDate: '',
+        endDate: ''
+    });
+
+    const handleSprintClick = (sprint) => {
+        setSelectedSprint(selectedSprint === sprint.id ? null : sprint.id);
+    };
+
+    const openEditSprintModal = (sprint, e) => {
+        e.stopPropagation();
+        setCurrentSprint(sprint);
+        setEditedSprintData({
+            name: sprint.name,
+            startDate: sprint.startDate,
+            endDate: sprint.endDate
+        });
+        setShowEditSprintModal(true);
+    };
+
+    const openDeleteSprintModal = (sprint, e) => {
+        e.stopPropagation();
+        setCurrentSprint(sprint);
+        setShowDeleteSprintModal(true);
+    };
+
+    const handleSaveSprintEdit = () => {
+        setSprints(sprints.map(sprint =>
+            sprint.id === currentSprint.id
+                ? {
+                    ...sprint,
+                    name: editedSprintData.name,
+                    startDate: editedSprintData.startDate,
+                    endDate: editedSprintData.endDate
+                }
+                : sprint
+        ));
+        setShowEditSprintModal(false);
+        setSelectedSprint(null);
+    };
+
+    const confirmDeleteSprint = () => {
+        setSprints(sprints.filter(sprint => sprint.id !== currentSprint.id));
+        setShowDeleteSprintModal(false);
+        setSelectedSprint(null);
     };
 
     // Función para manejar la selección de historia
@@ -143,23 +272,77 @@ const ProjectScreen = () => {
 
     // Función para guardar los cambios de edición
     const handleSaveEdit = () => {
-        // Actualizar la historia en el estado
         setUserStories(userStories.map(story =>
             story.id === currentStory.id
                 ? { ...story, title: editedData.title, description: editedData.description }
                 : story
         ));
-
         setShowEditModal(false);
         setSelectedStory(null);
     };
 
     // Función para confirmar borrado
     const confirmDelete = () => {
-        // Eliminar la historia del estado
         setUserStories(userStories.filter(story => story.id !== currentStory.id));
         setShowDeleteModal(false);
         setSelectedStory(null);
+    };
+
+    const toggleTaskCompletion = (storyId, taskId) => {
+        setUserStories(prevStories =>
+            prevStories.map(story => {
+                if (story.id === storyId) {
+                    return {
+                        ...story,
+                        tasks: story.tasks.map(task =>
+                            task.id === taskId ? {
+                                ...task,
+                                completed: !task.completed
+                            } : task
+                        )
+                    };
+                }
+                return story;
+            })
+        );
+    };
+
+    // Función para crear nueva historia
+    const handleCreateStory = () => {
+        if (validateStory()) {
+            const newId = Math.max(...userStories.map(story => story.id), 0) + 1;
+            setUserStories([
+                ...userStories,
+                {
+                    id: newId,
+                    title: newStory.title,
+                    description: newStory.description,
+                    tasks: []
+                }
+            ]);
+            setShowCreateStoryModal(false);
+            setNewStory({ title: '', description: '', tasks: [] });
+            setStoryErrors({ title: '', description: '' });
+        }
+    };
+
+    const handleCreateSprint = () => {
+        if (validateSprint()) {
+            const newId = sprints.length > 0 ? Math.max(...sprints.map(s => s.id)) + 1 : 1;
+            setSprints(prevSprints => [
+                ...prevSprints,
+                {
+                    id: newId,
+                    name: newSprint.name,
+                    startDate: newSprint.startDate,
+                    endDate: newSprint.endDate,
+                    stories: []
+                }
+            ]);
+            setShowCreateSprintModal(false);
+            setNewSprint({ name: '', startDate: '', endDate: '' });
+            setSprintErrors({ name: '', startDate: '', endDate: '' });
+        }
     };
 
     return (
@@ -352,6 +535,30 @@ const ProjectScreen = () => {
                     </motion.button>
                 </div>
 
+                {/* Botón de creación y título */}
+                <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: '16px' }}>
+                    <h2 style={{ color: '#2E2E48', fontSize: '20px', fontWeight: '600' }}>
+                        {activeTab === 'backlog' ? 'Historias de Usuario' : 'Sprints'}
+                    </h2>
+
+                    <motion.button
+                        whileHover={{ boxShadow: "0px 0px 15px rgba(103, 61, 230, 0.7)" }}
+                        whileTap={{ scale: 0.98 }}
+                        onClick={() => activeTab === 'backlog' ? setShowCreateStoryModal(true) : setShowCreateSprintModal(true)}
+                        style={{
+                            background: '#673DE6',
+                            color: '#FFFFFF',
+                            border: 'none',
+                            borderRadius: '8px',
+                            padding: '10px 20px',
+                            cursor: 'pointer',
+                            fontSize: '14px'
+                        }}
+                    >
+                        {activeTab === 'backlog' ? 'Crear Historia' : 'Crear Sprint'}
+                    </motion.button>
+                </div>
+
                 {/* Contenido de las pestañas */}
                 <div style={{ display: 'flex', gap: '24px' }}>
                     {/* Columna principal (Backlog o Sprints) */}
@@ -365,25 +572,12 @@ const ProjectScreen = () => {
                                     exit={{ opacity: 0, x: 20 }}
                                     transition={{ duration: 0.2 }}
                                 >
-                                    <h2 style={{
-                                        color: '#2E2E48',
-                                        fontSize: '20px',
-                                        fontWeight: '600',
-                                        marginBottom: '16px'
-                                    }}>Historias de Usuario</h2>
-
                                     {userStories.length > 0 ? (
-                                        userStories.map(story => (
+                                        <>
+                                            {/* Card para crear nueva historia */}
                                             <motion.div
-                                                key={story.id}
                                                 whileHover={{ y: -2 }}
-                                                onClick={() => handleStoryClick(story)}
-                                                initial={{ opacity: 1, height: 'auto' }}
-                                                animate={{
-                                                    opacity: 1,
-                                                    height: selectedStory === story.id ? 'auto' : 'auto'
-                                                }}
-                                                transition={{ duration: 0.2 }}
+                                                onClick={() => setShowCreateStoryModal(true)}
                                                 style={{
                                                     background: '#FFFFFF',
                                                     borderRadius: '8px',
@@ -391,147 +585,182 @@ const ProjectScreen = () => {
                                                     marginBottom: '12px',
                                                     boxShadow: '0 2px 8px rgba(0,0,0,0.05)',
                                                     cursor: 'pointer',
-                                                    borderLeft: '4px solid #673DE6'
+                                                    borderLeft: '4px solid #673DE6',
+                                                    display: 'flex',
+                                                    alignItems: 'center',
+                                                    justifyContent: 'center',
+                                                    gap: '8px'
                                                 }}
                                             >
-                                                <div style={{ display: 'flex', justifyContent: 'space-between' }}>
-                                                    <h3 style={{
-                                                        color: '#2E2E48',
-                                                        fontSize: '16px',
-                                                        fontWeight: '600',
-                                                    }}>{story.title}</h3>
-                                                </div>
+                                                <svg
+                                                    xmlns="http://www.w3.org/2000/svg"
+                                                    viewBox="0 0 24 24"
+                                                    width="20"
+                                                    height="20"
+                                                    fill={colors.secondary}
+                                                >
+                                                    <path d="M12 4a1 1 0 0 1 1 1v6h6a1 1 0 1 1 0 2h-6v6a1 1 0 1 1-2 0v-6H5a1 1 0 1 1 0-2h6V5a1 1 0 0 1 1-1z" />
+                                                </svg>
+                                                <span style={{ color: colors.secondary, fontWeight: '500' }}>
+                                                    Crear nueva historia
+                                                </span>
+                                            </motion.div>
 
-                                                <AnimatePresence>
-                                                    {selectedStory === story.id && (
-                                                        <motion.div
-                                                            initial={{ opacity: 0, height: 0 }}
-                                                            animate={{ opacity: 1, height: 'auto' }}
-                                                            exit={{ opacity: 0, height: 0 }}
-                                                            transition={{ duration: 0.2 }}
-                                                            style={{
-                                                                overflow: 'hidden',
-                                                                paddingTop: '12px'
-                                                            }}
-                                                        >
-                                                            <div style={{
-                                                                color: colors.lightText,
-                                                                fontSize: '14px',
-                                                                marginBottom: '12px'
-                                                            }}>
-                                                                {story.description}
-                                                            </div>
+                                            {/* Lista de historias existentes */}
+                                            {userStories.map(story => (
+                                                <motion.div
+                                                    key={story.id}
+                                                    whileHover={{ y: -2 }}
+                                                    onClick={() => handleStoryClick(story)}
+                                                    style={{
+                                                        background: '#FFFFFF',
+                                                        borderRadius: '8px',
+                                                        padding: '16px',
+                                                        marginBottom: '12px',
+                                                        boxShadow: '0 2px 8px rgba(0,0,0,0.05)',
+                                                        cursor: 'pointer',
+                                                        borderLeft: '4px solid #673DE6'
+                                                    }}
+                                                >
+                                                    <div style={{ display: 'flex', justifyContent: 'space-between' }}>
+                                                        <h3 style={{
+                                                            color: '#2E2E48',
+                                                            fontSize: '16px',
+                                                            fontWeight: '600',
+                                                        }}>{story.title}</h3>
+                                                    </div>
 
-                                                            <div style={{
-                                                                display: 'flex',
-                                                                justifyContent: 'space-between',
-                                                                alignItems: 'center'
-                                                            }}>
-                                                                <motion.button
-                                                                    whileHover={{ background: '#717171', color: "#f0f0f0" }}
-                                                                    whileTap={{ scale: 0.98 }}
-                                                                    onClick={(e) => openTasksModal(story, e)}
-                                                                    style={{
-                                                                        background: '#f0f0f0',
-                                                                        border: 'none',
-                                                                        borderRadius: '8px',
-                                                                        padding: '6px 12px',
-                                                                        fontSize: '12px',
-                                                                        color: '#4e4e4e',
-                                                                        cursor: 'pointer',
-                                                                        display: 'flex',
-                                                                        alignItems: 'center',
-                                                                        gap: '4px'
-                                                                    }}
-                                                                >
-                                                                    <svg
-                                                                        xmlns="http://www.w3.org/2000/svg"
-                                                                        viewBox="0 0 24 24"
-                                                                        width="1em"
-                                                                        height="1em"
-                                                                        fill="none"
-                                                                        stroke="currentColor"
-                                                                        strokeWidth="2"
-                                                                        strokeLinecap="round"
-                                                                        strokeLinejoin="round"
-                                                                    >
-                                                                        <path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"></path>
-                                                                        <polyline points="14 2 14 8 20 8"></polyline>
-                                                                        <line x1="16" y1="13" x2="8" y2="13"></line>
-                                                                        <line x1="16" y1="17" x2="8" y2="17"></line>
-                                                                        <polyline points="10 9 9 9 8 9"></polyline>
-                                                                    </svg>
-                                                                    Tareas ({story.tasks.length})
-                                                                </motion.button>
+                                                    <AnimatePresence>
+                                                        {selectedStory === story.id && (
+                                                            <motion.div
+                                                                initial={{ opacity: 0, height: 0 }}
+                                                                animate={{ opacity: 1, height: 'auto' }}
+                                                                exit={{ opacity: 0, height: 0 }}
+                                                                transition={{ duration: 0.2 }}
+                                                                style={{
+                                                                    overflow: 'hidden',
+                                                                    paddingTop: '12px'
+                                                                }}
+                                                            >
+                                                                <div style={{
+                                                                    color: colors.lightText,
+                                                                    fontSize: '14px',
+                                                                    marginBottom: '12px'
+                                                                }}>
+                                                                    {story.description}
+                                                                </div>
 
-                                                                <div style={{ display: 'flex', gap: '8px' }}>
+                                                                <div style={{
+                                                                    display: 'flex',
+                                                                    justifyContent: 'space-between',
+                                                                    alignItems: 'center'
+                                                                }}>
                                                                     <motion.button
-                                                                        whileHover={{ backgroundColor: '#673DE6', color: '#ddeeff' }}
-                                                                        onClick={(e) => openEditModal(story, e)}
+                                                                        whileHover={{ background: '#717171', color: "#f0f0f0" }}
+                                                                        whileTap={{ scale: 0.98 }}
+                                                                        onClick={(e) => openTasksModal(story, e)}
                                                                         style={{
-                                                                            background: '#ddeeff',
+                                                                            background: '#f0f0f0',
                                                                             border: 'none',
-                                                                            borderRadius: '50%',
-                                                                            padding: '3px 5px',
-                                                                            fontSize: '14px',
-                                                                            color: '#673DE6',
-                                                                            cursor: 'pointer'
-                                                                        }}
-                                                                    >
-                                                                        <svg
-                                                                            xmlns="http://www.w3.org/2000/svg"
-                                                                            viewBox="0 0 21 21"
-                                                                            width="1.35em"
-                                                                            height="1.35em"
-                                                                            style={{ paddingRight: '1px' }}
-                                                                        >
-                                                                            <path
-                                                                                fill="currentColor"
-                                                                                d="M13.249 8.837a.75.75 0 0 1 .274 1.025l-3.07 5.32a.75.75 0 1 1-1.3-.75l3.072-5.32a.75.75 0 0 1 1.024-.275"
-                                                                            ></path>
-                                                                            <path
-                                                                                fill="currentColor"
-                                                                                fillRule="evenodd"
-                                                                                d="m16.788 9.877l1.117-1.934a2.58 2.58 0 0 0-.276-2.966a5.62 5.62 0 0 0-3.227-1.863a2.58 2.58 0 0 0-2.706 1.244l-1.118 1.937l-.013.021l-3.922 6.794c-.272.47-.45.777-.577 1.108a4.5 4.5 0 0 0-.245.908c-.056.35-.057.704-.06 1.247l-.011 2.973v.067c0 .132.003.259.013.37c.014.161.05.415.218.645c.204.282.518.463.864.5c.284.029.521-.066.669-.135c.144-.067.31-.164.477-.261l1.643-.957l.007-.004l.826-.482c.469-.273.775-.451 1.05-.675q.367-.299.664-.666c.222-.276.4-.583.67-1.053l3.922-6.791zm-1.533-.344a4.94 4.94 0 0 0-3.611-2.085L7.97 13.809c-.31.538-.425.74-.505.948q-.113.295-.164.607c-.035.22-.038.452-.04 1.073l-.001.121a3.17 3.17 0 0 1 2.295 1.326l.105-.061c.537-.313.736-.431.909-.572q.245-.2.444-.446c.14-.173.258-.373.568-.91z"
-                                                                                clipRule="evenodd"
-                                                                            ></path>
-                                                                        </svg>
-                                                                    </motion.button>
-                                                                    <motion.button
-                                                                        whileHover={{ backgroundColor: 'red', color: '#ffdddd' }}
-                                                                        onClick={(e) => openDeleteModal(story, e)}
-                                                                        style={{
-                                                                            background: '#ffdddd',
-                                                                            border: 'none',
-                                                                            borderRadius: '50%',
-                                                                            padding: '3px 5.5px',
-                                                                            fontSize: '14px',
-                                                                            color: 'red',
+                                                                            borderRadius: '8px',
+                                                                            padding: '6px 12px',
+                                                                            fontSize: '12px',
+                                                                            color: '#4e4e4e',
                                                                             cursor: 'pointer',
-                                                                            transition: 'all 0.4s ease'
+                                                                            display: 'flex',
+                                                                            alignItems: 'center',
+                                                                            gap: '4px'
                                                                         }}
                                                                     >
                                                                         <svg
                                                                             xmlns="http://www.w3.org/2000/svg"
                                                                             viewBox="0 0 24 24"
-                                                                            width="1.3em"
-                                                                            height="1.3em"
-                                                                            style={{ marginTop: "1.5px" }}
+                                                                            width="1em"
+                                                                            height="1em"
+                                                                            fill="none"
+                                                                            stroke="currentColor"
+                                                                            strokeWidth="2"
+                                                                            strokeLinecap="round"
+                                                                            strokeLinejoin="round"
                                                                         >
-                                                                            <path
-                                                                                fill="currentColor"
-                                                                                fillRule="evenodd"
-                                                                                d="m18.412 6.5l-.801 13.617A2 2 0 0 1 15.614 22H8.386a2 2 0 0 1-1.997-1.883L5.59 6.5H3.5v-1A.5.5 0 0 1 4 5h16a.5.5 0 0 1 .5.5v1zM10 2.5h4a.5.5 0 0 1 .5.5v1h-5V3a.5.5 0 0 1 .5-.5M9 9l.5 9H11l-.4-9zm4.5 0l-.5 9h1.5l.5-9z"
-                                                                            ></path>
+                                                                            <path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"></path>
+                                                                            <polyline points="14 2 14 8 20 8"></polyline>
+                                                                            <line x1="16" y1="13" x2="8" y2="13"></line>
+                                                                            <line x1="16" y1="17" x2="8" y2="17"></line>
+                                                                            <polyline points="10 9 9 9 8 9"></polyline>
                                                                         </svg>
+                                                                        Tareas ({story.tasks.length})
                                                                     </motion.button>
+
+                                                                    <div style={{ display: 'flex', gap: '8px' }}>
+                                                                        <motion.button
+                                                                            whileHover={{ backgroundColor: '#673DE6', color: '#ddeeff' }}
+                                                                            onClick={(e) => openEditModal(story, e)}
+                                                                            style={{
+                                                                                background: '#ddeeff',
+                                                                                border: 'none',
+                                                                                borderRadius: '50%',
+                                                                                padding: '3px 5px',
+                                                                                fontSize: '14px',
+                                                                                color: '#673DE6',
+                                                                                cursor: 'pointer'
+                                                                            }}
+                                                                        >
+                                                                            <svg
+                                                                                xmlns="http://www.w3.org/2000/svg"
+                                                                                viewBox="0 0 21 21"
+                                                                                width="1.35em"
+                                                                                height="1.35em"
+                                                                                style={{ paddingRight: '1px' }}
+                                                                            >
+                                                                                <path
+                                                                                    fill="currentColor"
+                                                                                    d="M13.249 8.837a.75.75 0 0 1 .274 1.025l-3.07 5.32a.75.75 0 1 1-1.3-.75l3.072-5.32a.75.75 0 0 1 1.024-.275"
+                                                                                ></path>
+                                                                                <path
+                                                                                    fill="currentColor"
+                                                                                    fillRule="evenodd"
+                                                                                    d="m16.788 9.877l1.117-1.934a2.58 2.58 0 0 0-.276-2.966a5.62 5.62 0 0 0-3.227-1.863a2.58 2.58 0 0 0-2.706 1.244l-1.118 1.937l-.013.021l-3.922 6.794c-.272.47-.45.777-.577 1.108a4.5 4.5 0 0 0-.245.908c-.056.35-.057.704-.06 1.247l-.011 2.973v.067c0 .132.003.259.013.37c.014.161.05.415.218.645c.204.282.518.463.864.5c.284.029.521-.066.669-.135c.144-.067.31-.164.477-.261l1.643-.957l.007-.004l.826-.482c.469-.273.775-.451 1.05-.675q.367-.299.664-.666c.222-.276.4-.583.67-1.053l3.922-6.791zm-1.533-.344a4.94 4.94 0 0 0-3.611-2.085L7.97 13.809c-.31.538-.425.74-.505.948q-.113.295-.164.607c-.035.22-.038.452-.04 1.073l-.001.121a3.17 3.17 0 0 1 2.295 1.326l.105-.061c.537-.313.736-.431.909-.572q.245-.2.444-.446c.14-.173.258-.373.568-.91z"
+                                                                                    clipRule="evenodd"
+                                                                                ></path>
+                                                                            </svg>
+                                                                        </motion.button>
+                                                                        <motion.button
+                                                                            whileHover={{ backgroundColor: 'red', color: '#ffdddd' }}
+                                                                            onClick={(e) => openDeleteModal(story, e)}
+                                                                            style={{
+                                                                                background: '#ffdddd',
+                                                                                border: 'none',
+                                                                                borderRadius: '50%',
+                                                                                padding: '3px 5.5px',
+                                                                                fontSize: '14px',
+                                                                                color: 'red',
+                                                                                cursor: 'pointer',
+                                                                                transition: 'all 0.4s ease'
+                                                                            }}
+                                                                        >
+                                                                            <svg
+                                                                                xmlns="http://www.w3.org/2000/svg"
+                                                                                viewBox="0 0 24 24"
+                                                                                width="1.3em"
+                                                                                height="1.3em"
+                                                                                style={{ marginTop: "1.5px" }}
+                                                                            >
+                                                                                <path
+                                                                                    fill="currentColor"
+                                                                                    fillRule="evenodd"
+                                                                                    d="m18.412 6.5l-.801 13.617A2 2 0 0 1 15.614 22H8.386a2 2 0 0 1-1.997-1.883L5.59 6.5H3.5v-1A.5.5 0 0 1 4 5h16a.5.5 0 0 1 .5.5v1zM10 2.5h4a.5.5 0 0 1 .5.5v1h-5V3a.5.5 0 0 1 .5-.5M9 9l.5 9H11l-.4-9zm4.5 0l-.5 9h1.5l.5-9z"
+                                                                                ></path>
+                                                                            </svg>
+                                                                        </motion.button>
+                                                                    </div>
                                                                 </div>
-                                                            </div>
-                                                        </motion.div>
-                                                    )}
-                                                </AnimatePresence>
-                                            </motion.div>
-                                        ))
+                                                            </motion.div>
+                                                        )}
+                                                    </AnimatePresence>
+                                                </motion.div>
+                                            ))}
+                                        </>
                                     ) : (
                                         <div style={{
                                             background: '#FFFFFF',
@@ -539,14 +768,15 @@ const ProjectScreen = () => {
                                             padding: '24px',
                                             textAlign: 'center',
                                             boxShadow: '0 2px 8px rgba(0,0,0,0.05)',
-                                            justifyItems: 'center'
-                                        }}>
+                                            justifyItems: 'center',
+                                            cursor: 'pointer'
+                                        }} onClick={() => setShowCreateStoryModal(true)}>
                                             <div style={{
                                                 width: "6rem",
                                                 height: "6rem",
                                                 backgroundColor: "#F5F3FF",
                                                 borderRadius: "50%",
-                                                marginBottom: "2rem",
+                                                margin: '0 auto 2rem',
                                                 alignItems: 'center',
                                                 color: colors.secondary
                                             }}>
@@ -567,6 +797,10 @@ const ProjectScreen = () => {
                                             <motion.button
                                                 whileHover={{ boxShadow: "0px 0px 15px rgba(103, 61, 230, 0.7)" }}
                                                 whileTap={{ scale: 0.98 }}
+                                                onClick={(e) => {
+                                                    e.stopPropagation();
+                                                    setShowCreateStoryModal(true);
+                                                }}
                                                 style={{
                                                     background: '#673DE6',
                                                     color: '#FFFFFF',
@@ -591,65 +825,452 @@ const ProjectScreen = () => {
                                     exit={{ opacity: 0, x: -20 }}
                                     transition={{ duration: 0.2 }}
                                 >
-                                    <h2 style={{
-                                        color: '#2E2E48',
-                                        fontSize: '20px',
-                                        fontWeight: '600',
-                                        marginBottom: '16px'
-                                    }}>Sprints</h2>
-                                    <div style={{
-                                        background: '#FFFFFF',
-                                        borderRadius: '8px',
-                                        padding: '24px',
-                                        textAlign: 'center',
-                                        boxShadow: '0 2px 8px rgba(0,0,0,0.05)',
-                                        justifyItems: 'center',
-                                    }}>
-                                        <div style={{
-                                            width: "6rem",
-                                            height: "6rem",
-                                            backgroundColor: "#F5F3FF",
-                                            borderRadius: "50%",
-                                            marginBottom: "2rem",
-                                            alignItems: 'center'
-                                        }}>
-                                            <svg
-                                                xmlns="http://www.w3.org/2000/svg"
-                                                viewBox="0 0 14 14"
-                                                width="3em"
-                                                height="3em"
-                                                style={{ color: colors.secondary, padding: "1.4rem" }}
+                                    {sprints && sprints.length > 0 ? (
+                                        <>
+                                            {/* Card para crear nuevo sprint */}
+                                            <motion.div
+                                                whileHover={{ y: -2 }}
+                                                onClick={() => setShowCreateSprintModal(true)}
+                                                style={{
+                                                    background: '#FFFFFF',
+                                                    borderRadius: '8px',
+                                                    padding: '16px',
+                                                    marginBottom: '12px',
+                                                    boxShadow: '0 2px 8px rgba(0,0,0,0.05)',
+                                                    cursor: 'pointer',
+                                                    borderLeft: '4px solid #673DE6',
+                                                    display: 'flex',
+                                                    alignItems: 'center',
+                                                    justifyContent: 'center',
+                                                    gap: '8px'
+                                                }}
                                             >
-                                                <path
-                                                    fill="currentColor"
-                                                    fillRule="evenodd"
-                                                    d="M5.5 0A1.5 1.5 0 0 0 4 1.5v1.191A5.24 5.24 0 0 0 1.75 7c0 1.784.89 3.36 2.25 4.309V12.5A1.5 1.5 0 0 0 5.5 14h3a1.5 1.5 0 0 0 1.5-1.5v-1.191A5.24 5.24 0 0 0 12.25 7c0-1.784-.89-3.36-2.25-4.309V1.5A1.5 1.5 0 0 0 8.5 0zM3.25 7a3.75 3.75 0 1 1 7.5 0a3.75 3.75 0 0 1-7.5 0m4.438-1.956a.625.625 0 1 0-1.25 0v1.912c0 .166.065.325.183.442l1.125 1.125a.625.625 0 1 0 .883-.884l-.941-.942z"
-                                                    clipRule="evenodd"
-                                                ></path>
-                                            </svg>
+                                                <svg
+                                                    xmlns="http://www.w3.org/2000/svg"
+                                                    viewBox="0 0 24 24"
+                                                    width="20"
+                                                    height="20"
+                                                    fill={colors.secondary}
+                                                >
+                                                    <path d="M12 4a1 1 0 0 1 1 1v6h6a1 1 0 1 1 0 2h-6v6a1 1 0 1 1-2 0v-6H5a1 1 0 1 1 0-2h6V5a1 1 0 0 1 1-1z" />
+                                                </svg>
+                                                <span style={{ color: colors.secondary, fontWeight: '500' }}>
+                                                    Crear nuevo sprint
+                                                </span>
+                                            </motion.div>
+
+                                            {/* Lista de sprints existentes */}
+                                            {(sprints || []).map(sprint => (
+                                                <motion.div
+                                                    key={sprint.id}
+                                                    whileHover={{ y: -2 }}
+                                                    onClick={() => handleSprintClick(sprint)}
+                                                    style={{
+                                                        background: '#FFFFFF',
+                                                        borderRadius: '8px',
+                                                        padding: '16px',
+                                                        marginBottom: '12px',
+                                                        boxShadow: '0 2px 8px rgba(0,0,0,0.05)',
+                                                        cursor: 'pointer',
+                                                        borderLeft: '4px solid #673DE6'
+                                                    }}
+                                                >
+                                                    <div style={{ display: 'flex', justifyContent: 'space-between' }}>
+                                                        <h3 style={{
+                                                            color: '#2E2E48',
+                                                            fontSize: '16px',
+                                                            fontWeight: '600',
+                                                        }}>{sprint.name}</h3>
+                                                    </div>
+
+                                                    <AnimatePresence>
+                                                        {selectedSprint === sprint.id && (
+                                                            <motion.div
+                                                                initial={{ opacity: 0, height: 0 }}
+                                                                animate={{ opacity: 1, height: 'auto' }}
+                                                                exit={{ opacity: 0, height: 0 }}
+                                                                transition={{ duration: 0.2 }}
+                                                                style={{
+                                                                    overflow: 'hidden',
+                                                                    paddingTop: '12px'
+                                                                }}
+                                                            >
+                                                                <div style={{
+                                                                    color: colors.lightText,
+                                                                    fontSize: '14px',
+                                                                    marginBottom: '12px'
+                                                                }}>
+                                                                    {new Date(sprint.startDate).toLocaleDateString()} - {new Date(sprint.endDate).toLocaleDateString()}
+                                                                </div>
+
+                                                                <div style={{
+                                                                    display: 'flex',
+                                                                    justifyContent: 'space-between',
+                                                                    alignItems: 'center'
+                                                                }}>
+                                                                    <div style={{ display: 'flex', gap: '8px' }}>
+                                                                        <motion.button
+                                                                            whileHover={{ backgroundColor: '#673DE6', color: '#ddeeff' }}
+                                                                            onClick={(e) => openEditSprintModal(sprint, e)}
+                                                                            style={{
+                                                                                background: '#ddeeff',
+                                                                                border: 'none',
+                                                                                borderRadius: '50%',
+                                                                                padding: '3px 5px',
+                                                                                fontSize: '14px',
+                                                                                color: '#673DE6',
+                                                                                cursor: 'pointer'
+                                                                            }}
+                                                                        >
+                                                                            <svg
+                                                                                xmlns="http://www.w3.org/2000/svg"
+                                                                                viewBox="0 0 21 21"
+                                                                                width="1.35em"
+                                                                                height="1.35em"
+                                                                                style={{ paddingRight: '1px' }}
+                                                                            >
+                                                                                <path
+                                                                                    fill="currentColor"
+                                                                                    d="M13.249 8.837a.75.75 0 0 1 .274 1.025l-3.07 5.32a.75.75 0 1 1-1.3-.75l3.072-5.32a.75.75 0 0 1 1.024-.275"
+                                                                                ></path>
+                                                                                <path
+                                                                                    fill="currentColor"
+                                                                                    fillRule="evenodd"
+                                                                                    d="m16.788 9.877l1.117-1.934a2.58 2.58 0 0 0-.276-2.966a5.62 5.62 0 0 0-3.227-1.863a2.58 2.58 0 0 0-2.706 1.244l-1.118 1.937l-.013.021l-3.922 6.794c-.272.47-.45.777-.577 1.108a4.5 4.5 0 0 0-.245.908c-.056.35-.057.704-.06 1.247l-.011 2.973v.067c0 .132.003.259.013.37c.014.161.05.415.218.645c.204.282.518.463.864.5c.284.029.521-.066.669-.135c.144-.067.31-.164.477-.261l1.643-.957l.007-.004l.826-.482c.469-.273.775-.451 1.05-.675q.367-.299.664-.666c.222-.276.4-.583.67-1.053l3.922-6.791zm-1.533-.344a4.94 4.94 0 0 0-3.611-2.085L7.97 13.809c-.31.538-.425.74-.505.948q-.113.295-.164.607c-.035.22-.038.452-.04 1.073l-.001.121a3.17 3.17 0 0 1 2.295 1.326l.105-.061c.537-.313.736-.431.909-.572q.245-.2.444-.446c.14-.173.258-.373.568-.91z"
+                                                                                    clipRule="evenodd"
+                                                                                ></path>
+                                                                            </svg>
+                                                                        </motion.button>
+                                                                        <motion.button
+                                                                            whileHover={{ backgroundColor: 'red', color: '#ffdddd' }}
+                                                                            onClick={(e) => openDeleteSprintModal(sprint, e)}
+                                                                            style={{
+                                                                                background: '#ffdddd',
+                                                                                border: 'none',
+                                                                                borderRadius: '50%',
+                                                                                padding: '3px 5.5px',
+                                                                                fontSize: '14px',
+                                                                                color: 'red',
+                                                                                cursor: 'pointer',
+                                                                                transition: 'all 0.4s ease'
+                                                                            }}
+                                                                        >
+                                                                            <svg
+                                                                                xmlns="http://www.w3.org/2000/svg"
+                                                                                viewBox="0 0 24 24"
+                                                                                width="1.3em"
+                                                                                height="1.3em"
+                                                                                style={{ marginTop: "1.5px" }}
+                                                                            >
+                                                                                <path
+                                                                                    fill="currentColor"
+                                                                                    fillRule="evenodd"
+                                                                                    d="m18.412 6.5l-.801 13.617A2 2 0 0 1 15.614 22H8.386a2 2 0 0 1-1.997-1.883L5.59 6.5H3.5v-1A.5.5 0 0 1 4 5h16a.5.5 0 0 1 .5.5v1zM10 2.5h4a.5.5 0 0 1 .5.5v1h-5V3a.5.5 0 0 1 .5-.5M9 9l.5 9H11l-.4-9zm4.5 0l-.5 9h1.5l.5-9z"
+                                                                                ></path>
+                                                                            </svg>
+                                                                        </motion.button>
+                                                                    </div>
+                                                                </div>
+                                                            </motion.div>
+                                                        )}
+                                                    </AnimatePresence>
+                                                </motion.div>
+                                            ))}
+                                        </>
+                                    ) : (
+                                        <div style={{
+                                            background: '#FFFFFF',
+                                            borderRadius: '8px',
+                                            padding: '24px',
+                                            textAlign: 'center',
+                                            boxShadow: '0 2px 8px rgba(0,0,0,0.05)',
+                                            justifyItems: 'center',
+                                            cursor: 'pointer'
+                                        }} onClick={() => setShowCreateSprintModal(true)}>
+                                            <div style={{
+                                                width: "6rem",
+                                                height: "6rem",
+                                                backgroundColor: "#F5F3FF",
+                                                borderRadius: "50%",
+                                                margin: '0 auto 2rem',
+                                                alignItems: 'center'
+                                            }}>
+                                                <svg
+                                                    xmlns="http://www.w3.org/2000/svg"
+                                                    viewBox="0 0 14 14"
+                                                    width="3em"
+                                                    height="3em"
+                                                    style={{ color: colors.secondary, padding: "1.4rem" }}
+                                                >
+                                                    <path
+                                                        fill="currentColor"
+                                                        fillRule="evenodd"
+                                                        d="M5.5 0A1.5 1.5 0 0 0 4 1.5v1.191A5.24 5.24 0 0 0 1.75 7c0 1.784.89 3.36 2.25 4.309V12.5A1.5 1.5 0 0 0 5.5 14h3a1.5 1.5 0 0 0 1.5-1.5v-1.191A5.24 5.24 0 0 0 12.25 7c0-1.784-.89-3.36-2.25-4.309V1.5A1.5 1.5 0 0 0 8.5 0zM3.25 7a3.75 3.75 0 1 1 7.5 0a3.75 3.75 0 0 1-7.5 0m4.438-1.956a.625.625 0 1 0-1.25 0v1.912c0 .166.065.325.183.442l1.125 1.125a.625.625 0 1 0 .883-.884l-.941-.942z"
+                                                        clipRule="evenodd"
+                                                    ></path>
+                                                </svg>
+                                            </div>
+                                            <p style={{ color: '#6D6D80' }}>No hay sprints creados aún</p>
+                                            <motion.button
+                                                whileHover={{ boxShadow: "0px 0px 15px rgba(103, 61, 230, 0.7)" }}
+                                                whileTap={{ scale: 0.98 }}
+                                                onClick={(e) => {
+                                                    e.stopPropagation();
+                                                    setShowCreateSprintModal(true);
+                                                }}
+                                                style={{
+                                                    background: '#673DE6',
+                                                    color: '#FFFFFF',
+                                                    border: 'none',
+                                                    borderRadius: '8px',
+                                                    padding: '10px 20px',
+                                                    marginTop: '2rem',
+                                                    cursor: 'pointer',
+                                                    fontSize: '14px'
+                                                }}
+                                            >
+                                                Crear Sprint
+                                            </motion.button>
                                         </div>
-                                        <p style={{ color: '#6D6D80' }}>No hay sprints creados aún</p>
-                                        <motion.button
-                                            whileHover={{ boxShadow: "0px 0px 15px rgba(103, 61, 230, 0.7)" }}
-                                            whileTap={{ scale: 0.98 }}
-                                            style={{
-                                                background: '#673DE6',
-                                                color: '#FFFFFF',
-                                                border: 'none',
-                                                borderRadius: '8px',
-                                                padding: '10px 20px',
-                                                marginTop: '2rem',
-                                                cursor: 'pointer',
-                                                fontSize: '14px'
-                                            }}
-                                        >
-                                            Crear Sprint
-                                        </motion.button>
-                                    </div>
+                                    )}
                                 </motion.div>
                             )}
                         </AnimatePresence>
                     </div>
+
+                    {showEditSprintModal && (
+                        <motion.div
+                            initial={{ opacity: 0 }}
+                            animate={{ opacity: 1 }}
+                            exit={{ opacity: 0 }}
+                            style={{
+                                position: 'fixed',
+                                top: 0,
+                                left: 0,
+                                right: 0,
+                                bottom: 0,
+                                backgroundColor: 'rgba(0,0,0,0.5)',
+                                display: 'flex',
+                                alignItems: 'center',
+                                justifyContent: 'center',
+                                zIndex: 1000
+                            }}
+                        >
+                            <motion.div
+                                initial={{ scale: 0.9, y: 20 }}
+                                animate={{ scale: 1, y: 0 }}
+                                transition={{ type: 'spring', damping: 10 }}
+                                style={{
+                                    backgroundColor: '#FFFFFF',
+                                    padding: '24px',
+                                    borderRadius: '12px',
+                                    maxWidth: '500px',
+                                    width: '90%',
+                                    boxShadow: '0 10px 25px rgba(0,0,0,0.1)'
+                                }}
+                            >
+                                <h3 style={{
+                                    color: '#2E2E48',
+                                    fontSize: '20px',
+                                    fontWeight: '600',
+                                    marginBottom: '20px'
+                                }}>
+                                    Editar Sprint
+                                </h3>
+
+                                <div style={{ marginBottom: '16px' }}>
+                                    <label style={{
+                                        display: 'block',
+                                        marginBottom: '8px',
+                                        color: '#2E2E48',
+                                        fontWeight: '500'
+                                    }}>Nombre*</label>
+                                    <input
+                                        type="text"
+                                        value={editedSprintData.name}
+                                        onChange={(e) => setEditedSprintData({ ...editedSprintData, name: e.target.value })}
+                                        style={{
+                                            width: '95%',
+                                            padding: '12px',
+                                            borderRadius: '8px',
+                                            border: '1px solid #E5E5ED',
+                                            fontSize: '14px'
+                                        }}
+                                    />
+                                </div>
+
+                                <div style={{ marginBottom: '16px' }}>
+                                    <label style={{
+                                        display: 'block',
+                                        marginBottom: '8px',
+                                        color: '#2E2E48',
+                                        fontWeight: '500'
+                                    }}>Fecha de inicio*</label>
+                                    <input
+                                        type="date"
+                                        value={editedSprintData.startDate}
+                                        onChange={(e) => setEditedSprintData({ ...editedSprintData, startDate: e.target.value })}
+                                        style={{
+                                            width: '95%',
+                                            padding: '12px',
+                                            borderRadius: '8px',
+                                            border: '1px solid #E5E5ED',
+                                            fontSize: '14px'
+                                        }}
+                                    />
+                                </div>
+
+                                <div style={{ marginBottom: '16px' }}>
+                                    <label style={{
+                                        display: 'block',
+                                        marginBottom: '8px',
+                                        color: '#2E2E48',
+                                        fontWeight: '500'
+                                    }}>Fecha de fin*</label>
+                                    <input
+                                        type="date"
+                                        value={editedSprintData.endDate}
+                                        min={editedSprintData.startDate || ''}
+                                        onChange={(e) => setEditedSprintData({ ...editedSprintData, endDate: e.target.value })}
+                                        style={{
+                                            width: '95%',
+                                            padding: '12px',
+                                            borderRadius: '8px',
+                                            border: '1px solid #E5E5ED',
+                                            fontSize: '14px'
+                                        }}
+                                    />
+                                </div>
+
+                                <div style={{
+                                    display: 'flex',
+                                    justifyContent: 'flex-end',
+                                    gap: '12px'
+                                }}>
+                                    <motion.button
+                                        whileHover={{ background: '#ececec' }}
+                                        whileTap={{ scale: 0.98 }}
+                                        onClick={() => setShowEditSprintModal(false)}
+                                        style={{
+                                            background: '#F5F5F9',
+                                            border: 'none',
+                                            borderRadius: '8px',
+                                            padding: '10px 20px',
+                                            fontSize: '14px',
+                                            color: '#2E2E48',
+                                            cursor: 'pointer'
+                                        }}
+                                    >
+                                        Cancelar
+                                    </motion.button>
+                                    <motion.button
+                                        whileHover={{ boxShadow: "0px 0px 10px rgba(103, 61, 230, 0.7)", background: '#673DE6' }}
+                                        whileTap={{ scale: 0.98 }}
+                                        onClick={handleSaveSprintEdit}
+                                        style={{
+                                            background: 'rgba(103, 61, 230, 0.8)',
+                                            border: 'none',
+                                            borderRadius: '8px',
+                                            padding: '10px 20px',
+                                            fontSize: '14px',
+                                            color: '#FFFFFF',
+                                            cursor: 'pointer'
+                                        }}
+                                    >
+                                        Guardar
+                                    </motion.button>
+                                </div>
+                            </motion.div>
+                        </motion.div>
+                    )}
+
+                    {showDeleteSprintModal && (
+                        <motion.div
+                            initial={{ opacity: 0 }}
+                            animate={{ opacity: 1 }}
+                            exit={{ opacity: 0 }}
+                            style={{
+                                position: 'fixed',
+                                top: 0,
+                                left: 0,
+                                right: 0,
+                                bottom: 0,
+                                backgroundColor: 'rgba(0,0,0,0.5)',
+                                display: 'flex',
+                                alignItems: 'center',
+                                justifyContent: 'center',
+                                zIndex: 1000
+                            }}
+                        >
+                            <motion.div
+                                initial={{ scale: 0.9, y: 20 }}
+                                animate={{ scale: 1, y: 0 }}
+                                transition={{ type: 'spring', damping: 10 }}
+                                style={{
+                                    backgroundColor: '#FFFFFF',
+                                    padding: '24px',
+                                    borderRadius: '12px',
+                                    maxWidth: '400px',
+                                    width: '90%',
+                                    boxShadow: '0 10px 25px rgba(0,0,0,0.1)'
+                                }}
+                            >
+                                <h3 style={{
+                                    color: '#2E2E48',
+                                    fontSize: '18px',
+                                    fontWeight: '600',
+                                    marginBottom: '16px'
+                                }}>
+                                    Confirmar borrado
+                                </h3>
+                                <p style={{
+                                    color: '#6D6D80',
+                                    fontSize: '14px',
+                                    marginBottom: '24px'
+                                }}>
+                                    ¿Estás seguro que quieres borrar el sprint "{currentSprint?.name}"?
+                                </p>
+                                <div style={{
+                                    display: 'flex',
+                                    justifyContent: 'flex-end',
+                                    gap: '12px'
+                                }}>
+                                    <motion.button
+                                        whileHover={{ background: '#ececec' }}
+                                        whileTap={{ scale: 0.98 }}
+                                        onClick={() => setShowDeleteSprintModal(false)}
+                                        style={{
+                                            background: '#F5F5F9',
+                                            border: 'none',
+                                            borderRadius: '8px',
+                                            padding: '10px 20px',
+                                            fontSize: '14px',
+                                            color: '#2E2E48',
+                                            cursor: 'pointer'
+                                        }}
+                                    >
+                                        Cancelar
+                                    </motion.button>
+                                    <motion.button
+                                        whileHover={{ boxShadow: "0px 0px 10px rgba(255, 0, 0, 0.7)", background: 'red' }}
+                                        whileTap={{ scale: 0.98 }}
+                                        onClick={confirmDeleteSprint}
+                                        style={{
+                                            background: '#FF5252',
+                                            border: 'none',
+                                            borderRadius: '8px',
+                                            padding: '10px 20px',
+                                            fontSize: '14px',
+                                            color: '#FFFFFF',
+                                            cursor: 'pointer'
+                                        }}
+                                    >
+                                        Borrar
+                                    </motion.button>
+                                </div>
+                            </motion.div>
+                        </motion.div>
+                    )}
 
                     {/* Panel lateral (Miembros) */}
                     <div style={{ flex: 1 }}>
@@ -881,7 +1502,7 @@ const ProjectScreen = () => {
                                                     }
                                                 }}
                                                 style={{
-                                                    background:'rgba(103, 61, 230, 0.8)',
+                                                    background: 'rgba(103, 61, 230, 0.8)',
                                                     border: 'none',
                                                     borderRadius: '8px',
                                                     padding: '10px 20px',
@@ -935,6 +1556,322 @@ const ProjectScreen = () => {
                     </div>
                 </div>
             </main>
+
+            {/* Modal de creación de historia */}
+            {showCreateStoryModal && (
+                <motion.div
+                    initial={{ opacity: 0 }}
+                    animate={{ opacity: 1 }}
+                    exit={{ opacity: 0 }}
+                    style={{
+                        position: 'fixed',
+                        top: 0,
+                        left: 0,
+                        right: 0,
+                        bottom: 0,
+                        backgroundColor: 'rgba(0,0,0,0.5)',
+                        display: 'flex',
+                        alignItems: 'center',
+                        justifyContent: 'center',
+                        zIndex: 1000
+                    }}
+                >
+                    <motion.div
+                        initial={{ scale: 0.9, y: 20 }}
+                        animate={{ scale: 1, y: 0 }}
+                        transition={{ type: 'spring', damping: 10 }}
+                        style={{
+                            backgroundColor: '#FFFFFF',
+                            padding: '24px',
+                            borderRadius: '12px',
+                            maxWidth: '500px',
+                            width: '90%',
+                            boxShadow: '0 10px 25px rgba(0,0,0,0.1)'
+                        }}
+                    >
+                        <h3 style={{
+                            color: '#2E2E48',
+                            fontSize: '20px',
+                            fontWeight: '600',
+                            marginBottom: '20px'
+                        }}>
+                            Crear Nueva Historia
+                        </h3>
+
+                        <div style={{ marginBottom: '16px' }}>
+                            <label style={{
+                                display: 'block',
+                                marginBottom: '8px',
+                                color: '#2E2E48',
+                                fontWeight: '500'
+                            }}>Título*</label>
+                            <input
+                                type="text"
+                                value={newStory.title}
+                                onChange={(e) => setNewStory({ ...newStory, title: e.target.value })}
+                                style={{
+                                    width: '95%',
+                                    padding: '12px',
+                                    borderRadius: '8px',
+                                    border: storyErrors.title ? `1px solid ${colors.error}` : '1px solid #E5E5ED',
+                                    fontSize: '14px'
+                                }}
+                            />
+                            {storyErrors.title && (
+                                <div style={{
+                                    color: colors.error,
+                                    fontSize: '12px',
+                                    marginTop: '4px'
+                                }}>{storyErrors.title}</div>
+                            )}
+                        </div>
+
+                        <div style={{ marginBottom: '16px' }}>
+                            <label style={{
+                                display: 'block',
+                                marginBottom: '8px',
+                                color: '#2E2E48',
+                                fontWeight: '500'
+                            }}>Descripción*</label>
+                            <textarea
+                                value={newStory.description}
+                                onChange={(e) => setNewStory({ ...newStory, description: e.target.value })}
+                                style={{
+                                    width: '95%',
+                                    padding: '12px',
+                                    borderRadius: '8px',
+                                    border: storyErrors.description ? `1px solid ${colors.error}` : '1px solid #E5E5ED',
+                                    fontSize: '14px',
+                                    minHeight: '100px',
+                                    fontFamily: "'Poppins', sans-serif",
+                                    resize: "vertical",
+                                    maxHeight: '250px'
+                                }}
+                            />
+                            {storyErrors.description && (
+                                <div style={{
+                                    color: colors.error,
+                                    fontSize: '12px',
+                                    marginTop: '4px'
+                                }}>{storyErrors.description}</div>
+                            )}
+                        </div>
+
+                        <div style={{
+                            display: 'flex',
+                            justifyContent: 'flex-end',
+                            gap: '12px'
+                        }}>
+                            <motion.button
+                                whileHover={{ background: '#ececec' }}
+                                whileTap={{ scale: 0.98 }}
+                                onClick={() => {
+                                    setShowCreateStoryModal(false);
+                                    setStoryErrors({ title: '', description: '' });
+                                }}
+                                style={{
+                                    background: '#F5F5F9',
+                                    border: 'none',
+                                    borderRadius: '8px',
+                                    padding: '10px 20px',
+                                    fontSize: '14px',
+                                    color: '#2E2E48',
+                                    cursor: 'pointer'
+                                }}
+                            >
+                                Cancelar
+                            </motion.button>
+                            <motion.button
+                                whileHover={{ boxShadow: "0px 0px 10px rgba(103, 61, 230, 0.7)", background: '#673DE6' }}
+                                whileTap={{ scale: 0.98 }}
+                                onClick={handleCreateStory}
+                                style={{
+                                    background: 'rgba(103, 61, 230, 0.8)',
+                                    border: 'none',
+                                    borderRadius: '8px',
+                                    padding: '10px 20px',
+                                    fontSize: '14px',
+                                    color: '#FFFFFF',
+                                    cursor: 'pointer'
+                                }}
+                            >
+                                Crear
+                            </motion.button>
+                        </div>
+                    </motion.div>
+                </motion.div>
+            )}
+
+            {/* Modal de creación de sprint */}
+            {showCreateSprintModal && (
+                <motion.div
+                    initial={{ opacity: 0 }}
+                    animate={{ opacity: 1 }}
+                    exit={{ opacity: 0 }}
+                    style={{
+                        position: 'fixed',
+                        top: 0,
+                        left: 0,
+                        right: 0,
+                        bottom: 0,
+                        backgroundColor: 'rgba(0,0,0,0.5)',
+                        display: 'flex',
+                        alignItems: 'center',
+                        justifyContent: 'center',
+                        zIndex: 1000
+                    }}
+                >
+                    <motion.div
+                        initial={{ scale: 0.9, y: 20 }}
+                        animate={{ scale: 1, y: 0 }}
+                        transition={{ type: 'spring', damping: 10 }}
+                        style={{
+                            backgroundColor: '#FFFFFF',
+                            padding: '24px',
+                            borderRadius: '12px',
+                            maxWidth: '500px',
+                            width: '90%',
+                            boxShadow: '0 10px 25px rgba(0,0,0,0.1)'
+                        }}
+                    >
+                        <h3 style={{
+                            color: '#2E2E48',
+                            fontSize: '20px',
+                            fontWeight: '600',
+                            marginBottom: '20px'
+                        }}>
+                            Crear Nuevo Sprint
+                        </h3>
+
+                        <div style={{ marginBottom: '16px' }}>
+                            <label style={{
+                                display: 'block',
+                                marginBottom: '8px',
+                                color: '#2E2E48',
+                                fontWeight: '500'
+                            }}>Nombre del Sprint*</label>
+                            <input
+                                type="text"
+                                value={newSprint.name}
+                                onChange={(e) => setNewSprint({ ...newSprint, name: e.target.value })}
+                                style={{
+                                    width: '95%',
+                                    padding: '12px',
+                                    borderRadius: '8px',
+                                    border: sprintErrors.name ? `1px solid ${colors.error}` : '1px solid #E5E5ED',
+                                    fontSize: '14px'
+                                }}
+                            />
+                            {sprintErrors.name && (
+                                <div style={{
+                                    color: colors.error,
+                                    fontSize: '12px',
+                                    marginTop: '4px'
+                                }}>{sprintErrors.name}</div>
+                            )}
+                        </div>
+
+                        <div style={{ marginBottom: '16px' }}>
+                            <label style={{
+                                display: 'block',
+                                marginBottom: '8px',
+                                color: '#2E2E48',
+                                fontWeight: '500'
+                            }}>Fecha de inicio*</label>
+                            <input
+                                type="date"
+                                value={newSprint.startDate}
+                                onChange={(e) => setNewSprint({ ...newSprint, startDate: e.target.value })}
+                                style={{
+                                    width: '95%',
+                                    padding: '12px',
+                                    borderRadius: '8px',
+                                    border: sprintErrors.startDate ? `1px solid ${colors.error}` : '1px solid #E5E5ED',
+                                    fontSize: '14px'
+                                }}
+                            />
+                            {sprintErrors.startDate && (
+                                <div style={{
+                                    color: colors.error,
+                                    fontSize: '12px',
+                                    marginTop: '4px'
+                                }}>{sprintErrors.startDate}</div>
+                            )}
+                        </div>
+
+                        <div style={{ marginBottom: '16px' }}>
+                            <label style={{
+                                display: 'block',
+                                marginBottom: '8px',
+                                color: '#2E2E48',
+                                fontWeight: '500'
+                            }}>Fecha de fin*</label>
+                            <input
+                                type="date"
+                                value={newSprint.endDate}
+                                onChange={(e) => setNewSprint({ ...newSprint, endDate: e.target.value })}
+                                min={newSprint.startDate || ''}
+                                style={{
+                                    width: '95%',
+                                    padding: '12px',
+                                    borderRadius: '8px',
+                                    border: sprintErrors.endDate ? `1px solid ${colors.error}` : '1px solid #E5E5ED',
+                                    fontSize: '14px'
+                                }}
+                            />
+                            {sprintErrors.endDate && (
+                                <div style={{
+                                    color: colors.error,
+                                    fontSize: '12px',
+                                    marginTop: '4px'
+                                }}>{sprintErrors.endDate}</div>
+                            )}
+                        </div>
+
+                        <div style={{
+                            display: 'flex',
+                            justifyContent: 'flex-end',
+                            gap: '12px'
+                        }}>
+                            <motion.button
+                                whileHover={{ background: '#ececec' }}
+                                whileTap={{ scale: 0.98 }}
+                                onClick={() => {
+                                    setShowCreateSprintModal(false);
+                                    setSprintErrors({ name: '', startDate: '', endDate: '' });
+                                }}
+                                style={{
+                                    background: '#F5F5F9',
+                                    border: 'none',
+                                    borderRadius: '8px',
+                                    padding: '10px 20px',
+                                    fontSize: '14px',
+                                    color: '#2E2E48',
+                                    cursor: 'pointer'
+                                }}
+                            >
+                                Cancelar
+                            </motion.button>
+                            <motion.button
+                                whileHover={{ boxShadow: "0px 0px 10px rgba(103, 61, 230, 0.7)", background: '#673DE6' }}
+                                whileTap={{ scale: 0.98 }}
+                                onClick={handleCreateSprint}
+                                style={{
+                                    background: 'rgba(103, 61, 230, 0.8)',
+                                    border: 'none',
+                                    borderRadius: '8px',
+                                    padding: '10px 20px',
+                                    fontSize: '14px',
+                                    color: '#FFFFFF',
+                                    cursor: 'pointer'
+                                }}
+                            >
+                                Crear
+                            </motion.button>
+                        </div>
+                    </motion.div>
+                </motion.div>
+            )}
 
             {/* Modal de edición */}
             {showEditModal && (
@@ -1203,23 +2140,21 @@ const ProjectScreen = () => {
                                         gap: '12px',
                                         padding: '12px',
                                         borderBottom: `1px solid ${colors.border}`,
-                                        background: task.completed ? '#f0fff0' : 'transparent'
+                                        background: task.completed ? '#F0F8FF' : 'transparent',
+                                        borderRadius: '4px',
+                                        transition: 'background 0.3s ease'
                                     }}>
                                         <input
                                             type="checkbox"
-                                            checked={task.completed}
-                                            onChange={() => { }}
+                                            checked={task.completed || false}
+                                            onChange={() => toggleTaskCompletion(currentStory.id, task.id)}
                                             style={{
                                                 width: '18px',
                                                 height: '18px',
                                                 cursor: 'pointer'
                                             }}
                                         />
-                                        <span style={{
-                                            textDecoration: task.completed ? 'line-through' : 'none',
-                                            color: task.completed ? colors.lightText : colors.text,
-                                            flex: 1
-                                        }}>
+                                        <span style={{ flex: 1 }}>
                                             {task.title}
                                         </span>
                                     </div>
