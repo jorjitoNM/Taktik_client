@@ -1,24 +1,16 @@
-import { useState } from 'react'
-import UserStoryCreationButton from '../userStoryCreationComponents/userStoryCreationButton/userStoryCreationButton'
-import UserStoryCreationModal from '../userStoryCreationComponents/userStoryCreationModal/userStoryCreationModal'
+import HomeScreen from '../homeComponent/HomeScreen';
+import { BrowserRouter as Router, Routes, Route } from 'react-router-dom';
 
 function App() {
-  const [modalOpened, setModalOpened] = useState(false)
-
-  const onClick = () => {
-    setModalOpened(true)
-  }
-
-  const onClose = () => {
-    setModalOpened(false)
-  }
-
   return (
-    <>
-      <UserStoryCreationButton onClick={onClick}/>
-      <UserStoryCreationModal isOpened={modalOpened} onClose={onClose} />
-    </>
-  )
+    <Router>
+        <Routes>
+          {/* <Route path="/login" element={<LoginScreen />} /> */}
+          {/* <Route path="/register" element={<RegisterScreen />} /> */}
+          <Route path="/" element={<HomeScreen />} />
+        </Routes>
+    </Router>
+  );
 }
 
 export default App
