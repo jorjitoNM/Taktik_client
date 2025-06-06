@@ -1,7 +1,6 @@
 import { useState } from 'react'
-import UserStoryCreationButton from '../userStoryCreationComponents/userStoryCreationButton/UserStoryCreationButton'
-import './App.css'
-import UserStoryCreationModal from '../userStoryCreationComponents/userStoryCreationModal/UserStoryCreationModal'
+import UserStoryCreationButton from '../userStoryCreationComponents/userStoryCreationButton/userStoryCreationButton'
+import UserStoryCreationModal from '../userStoryCreationComponents/userStoryCreationModal/userStoryCreationModal'
 
 function App() {
   const [modalOpened, setModalOpened] = useState(false)
