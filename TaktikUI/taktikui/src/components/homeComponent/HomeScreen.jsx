@@ -4,6 +4,7 @@ import { useNavigate } from 'react-router-dom';
 import logo from '../../assets/Taktik.png';
 import avatar from '../../assets/Avatar.png';
 import { getProjects, addProject } from '../service/apiHome.js';
+import styles from './HomeScreen.module.css'
 
 const HomeScreen = () => {
     const [projects, setProjects] = useState([]);
@@ -454,7 +455,7 @@ const HomeScreen = () => {
                                 width: '100%',
                                 maxWidth: '500px',
                                 boxShadow: '0 10px 30px rgba(0,0,0,0.1)',
-                                overflow: 'hidden'
+                                overflow: 'visible'
                             }}
                             onClick={(e) => e.stopPropagation()}
                         >
@@ -485,11 +486,11 @@ const HomeScreen = () => {
                                         value={newProject.name}
                                         onChange={handleInputChange}
                                         placeholder="Ej: Mi Sitio Web"
+                                        className= {styles['project-creation-field']}
                                         style={{
-                                            width: '100%',
+                                            width: '92%',
                                             padding: '12px 16px',
                                             borderRadius: '8px',
-                                            border: `1px solid ${colors.border}`,
                                             fontSize: '14px',
                                             outline: 'none',
                                             transition: 'all 0.2s ease'
@@ -510,15 +511,15 @@ const HomeScreen = () => {
                                         value={newProject.description}
                                         onChange={handleInputChange}
                                         placeholder="Breve descripción del proyecto..."
+                                        className={styles['project-creation-field']}
                                         style={{
                                             fontFamily: "'Poppins', sans-serif",
-                                            width: '100%',
+                                            width: '92%',
                                             padding: '12px 16px',
                                             borderRadius: '8px',
-                                            border: `1px solid ${colors.border}`,
                                             fontSize: '14px',
                                             minHeight: '100px',
-                                            resize: 'vertical',
+                                            resize: 'none',
                                             outline: 'none',
                                             transition: 'all 0.2s ease'
                                         }}
