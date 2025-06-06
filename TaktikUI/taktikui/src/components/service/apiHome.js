@@ -15,6 +15,7 @@ export const addProject = async (projectData) => {
     try {
         const response = await axios.post("http://localhost:8080/api/1.0/project/add", projectData, {
             headers: {
+                'Accept' : 'application/json',
                 'Content-Type': 'application/json'
             }
         });

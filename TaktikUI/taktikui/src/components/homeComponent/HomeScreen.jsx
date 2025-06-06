@@ -40,10 +40,14 @@ const HomeScreen = () => {
         setIsCreating(true);
         try {
             const createdProject = await addProject({
+                publicId : '',
                 name: newProject.name,
-                description: newProject.description
+                sprints : [],
+                backlog : [],
+                issues : [],
+                members : []
             });
-
+            console.log("Projecto creado:", createdProject)    
             setProjects([...projects, createdProject]);
             setNewProject({ name: '', description: '' });
             setShowCreateModal(false);
@@ -315,10 +319,10 @@ const HomeScreen = () => {
                     }}>
                         {projects.map(project => (
                             <motion.div
-                                key={project.id}
+                                key={project.publicId}
                                 whileHover={{ y: -5 }}
                                 whileTap={{ scale: 0.98 }}
-                                onClick={() => handleProjectClick(project.id)}
+                                onClick={() => handleProjectClick(project.publicId)}
                                 style={{
                                     background: colors.white,
                                     borderRadius: '12px',
@@ -345,32 +349,18 @@ const HomeScreen = () => {
                                         <path d="M9 13H15" stroke={colors.secondary} strokeWidth="2" strokeLinecap="round" />
                                     </svg>
                                 </div>
-                                <h3 style={{
+                                <br />
+                                <h2 style={{
                                     color: colors.text,
                                     fontSize: '18px',
                                     fontWeight: '600',
                                     margin: '0 0 8px 0'
-                                }}>{project.name}</h3>
+                                }}>{project.name}</h2>
                                 <p style={{
                                     color: colors.lightText,
                                     fontSize: '14px',
                                     margin: '0 0 16px 0'
                                 }}>{project.description}</p>
-                                <div style={{
-                                    display: 'flex',
-                                    justifyContent: 'space-between',
-                                    alignItems: 'center'
-                                }}>
-                                    <span style={{
-                                        fontSize: '12px',
-                                        color: colors.secondary,
-                                        background: '#F5F3FF',
-                                        padding: '4px 8px',
-                                        borderRadius: '4px',
-                                        fontWeight: '500'
-                                    }}>#{project.id}</span>
-
-                                </div>
                             </motion.div>
                         ))}
 
