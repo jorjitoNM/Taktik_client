@@ -1,8 +1,15 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { useParams, useNavigate } from 'react-router-dom';
 import logo from '../../assets/Taktik.png';
 import avatar from '../../assets/Avatar.png';
+import {
+    getProject,
+    getStoryTasks,
+    addUserStory,
+    addSprint,
+    inviteUserToProject
+} from '../service/apiProject.js';
 
 const colors = {
     white: '#FFFFFF',
@@ -14,9 +21,11 @@ const colors = {
 };
 
 const ProjectScreen = () => {
-    const { projectName } = useParams();
+    const { projectId } = useParams();
     const navigate = useNavigate();
     const [dropdownOpen, setDropdownOpen] = useState(false);
+    const [loading, setLoading] = useState(true);
+    const [projectData, setProjectData] = useState(null);
 
     const [showMemberModal, setShowMemberModal] = useState(false);
     const [newMember, setNewMember] = useState({
@@ -31,38 +40,10 @@ const ProjectScreen = () => {
     });
 
     // Datos de las historias de usuario (sin completed en tasks)
-    const [userStories, setUserStories] = useState([
-        {
-            id: 1,
-            title: 'Crear página de inicio',
-            description: 'Diseñar y desarrollar la página principal de la aplicación con los componentes básicos.',
-            tasks: [
-                { id: 1, title: 'Diseñar layout' },
-                { id: 2, title: 'Implementar navbar' },
-                { id: 3, title: 'Crear footer' }
-            ]
-        },
-        {
-            id: 2,
-            title: 'Implementar autenticación',
-            description: 'Configurar sistema de autenticación con JWT y roles de usuario.',
-            tasks: [
-                { id: 1, title: 'Configurar backend para JWT' }
-            ]
-        },
-        {
-            id: 3,
-            title: 'Diseñar base de datos',
-            description: 'Crear el esquema de la base de datos y las relaciones entre entidades.',
-            tasks: []
-        }
-    ]);
+    const [userStories, setUserStories] = useState([]);
 
     // Datos de los miembros del proyecto
-    const [members, setMembers] = useState([
-        { id: 1, name: 'Juan Pérez', role: 'Desarrollador', email: 'juan@email.com' },
-        { id: 2, name: 'María García', role: 'Diseñadora', email: 'maria@email.com' }
-    ]);
+    const [members, setMembers] = useState([]);
 
     // Estado para la pestaña activa (Backlog o Sprints)
     const [activeTab, setActiveTab] = useState('backlog');
@@ -113,11 +94,6 @@ const ProjectScreen = () => {
             role: '',
             email: ''
         };
-
-        if (!newMember.name.trim()) {
-            newErrors.name = 'El nombre es obligatorio';
-            valid = false;
-        }
 
         if (!newMember.role) {
             newErrors.role = 'Debes seleccionar un rol';
@@ -198,7 +174,7 @@ const ProjectScreen = () => {
     });
 
     const handleSprintClick = (sprint) => {
-        setSelectedSprint(selectedSprint === sprint.id ? null : sprint.id);
+        setSelectedSprint(selectedSprint === sprint.publicId ? null : sprint.publicId);
     };
 
     const openEditSprintModal = (sprint, e) => {
@@ -206,8 +182,8 @@ const ProjectScreen = () => {
         setCurrentSprint(sprint);
         setEditedSprintData({
             name: sprint.name,
-            startDate: sprint.startDate,
-            endDate: sprint.endDate
+            startDate: sprint.start,
+            endDate: sprint.end
         });
         setShowEditSprintModal(true);
     };
@@ -220,7 +196,7 @@ const ProjectScreen = () => {
 
     const handleSaveSprintEdit = () => {
         setSprints(sprints.map(sprint =>
-            sprint.id === currentSprint.id
+            sprint.publicId === currentSprint.publicId
                 ? {
                     ...sprint,
                     name: editedSprintData.name,
@@ -234,14 +210,14 @@ const ProjectScreen = () => {
     };
 
     const confirmDeleteSprint = () => {
-        setSprints(sprints.filter(sprint => sprint.id !== currentSprint.id));
+        setSprints(sprints.filter(sprint => sprint.publicId !== currentSprint.publicId));
         setShowDeleteSprintModal(false);
         setSelectedSprint(null);
     };
 
     // Función para manejar la selección de historia
     const handleStoryClick = (story) => {
-        setSelectedStory(selectedStory === story.id ? null : story.id);
+        setSelectedStory(selectedStory === story.publicId ? null : story.publicId);
     };
 
     // Función para abrir el modal de edición
@@ -272,7 +248,7 @@ const ProjectScreen = () => {
     // Función para guardar los cambios de edición
     const handleSaveEdit = () => {
         setUserStories(userStories.map(story =>
-            story.id === currentStory.id
+            story.publicId === currentStory.publicId
                 ? { ...story, title: editedData.title, description: editedData.description }
                 : story
         ));
@@ -282,7 +258,7 @@ const ProjectScreen = () => {
 
     // Función para confirmar borrado
     const confirmDelete = () => {
-        setUserStories(userStories.filter(story => story.id !== currentStory.id));
+        setUserStories(userStories.filter(story => story.publicId !== currentStory.publicId));
         setShowDeleteModal(false);
         setSelectedStory(null);
     };
@@ -290,11 +266,11 @@ const ProjectScreen = () => {
     const toggleTaskCompletion = (storyId, taskId) => {
         setUserStories(prevStories =>
             prevStories.map(story => {
-                if (story.id === storyId) {
+                if (story.publicId === storyId) {
                     return {
                         ...story,
                         tasks: story.tasks.map(task =>
-                            task.id === taskId ? {
+                            task.publicId === taskId ? {
                                 ...task,
                                 completed: !task.completed
                             } : task
@@ -306,43 +282,94 @@ const ProjectScreen = () => {
         );
     };
 
+    useEffect(() => {
+        const fetchProjectData = async () => {
+            try {
+                setLoading(true);
+                const [project] = await Promise.all([
+                    getProject(projectId)
+                ]);
+
+                setProjectData(project);
+                setUserStories(project.backlog || []);
+                setSprints(project.sprints || []);
+                setMembers(project.members || []);
+            } catch (error) {
+                console.error("Error loading project data:", error);
+            } finally {
+                setLoading(false);
+            }
+        };
+
+        fetchProjectData();
+    }, [projectId, navigate]);
+
     // Función para crear nueva historia
-    const handleCreateStory = () => {
+    const handleCreateStory = async () => {
         if (validateStory()) {
-            const newId = Math.max(...userStories.map(story => story.id), 0) + 1;
-            setUserStories([
-                ...userStories,
-                {
-                    id: newId,
+            try {
+                const createdStory = await addUserStory(projectId, {
+                    publicId: null,
                     title: newStory.title,
                     description: newStory.description,
+                    state: "NEW",
                     tasks: []
-                }
-            ]);
-            setShowCreateStoryModal(false);
-            setNewStory({ title: '', description: '', tasks: [] });
-            setStoryErrors({ title: '', description: '' });
+                });
+
+                setUserStories([
+                    ...userStories,
+                    createdStory
+                ]);
+
+                setShowCreateStoryModal(false);
+                setNewStory({ title: '', description: '', tasks: [] });
+                setStoryErrors({ title: '', description: '' });
+            } catch (error) {
+                console.error("Error creating story:", error);
+            }
         }
     };
 
-    const handleCreateSprint = () => {
+    const handleCreateSprint = async () => {
         if (validateSprint()) {
-            const newId = sprints.length > 0 ? Math.max(...sprints.map(s => s.id)) + 1 : 1;
-            setSprints(prevSprints => [
-                ...prevSprints,
-                {
-                    id: newId,
+            try {
+                const createdSprint = await addSprint(projectId, {
+                    publicId: null,
                     name: newSprint.name,
-                    startDate: newSprint.startDate,
-                    endDate: newSprint.endDate,
-                    stories: []
-                }
-            ]);
-            setShowCreateSprintModal(false);
-            setNewSprint({ name: '', startDate: '', endDate: '' });
-            setSprintErrors({ name: '', startDate: '', endDate: '' });
+                    start: newSprint.startDate,
+                    end: newSprint.endDate,
+                    backlog: [],
+                    kanbanStates: []
+                });
+
+                setSprints(prevSprints => [
+                    ...prevSprints,
+                    createdSprint
+                ]);
+
+                setShowCreateSprintModal(false);
+                setNewSprint({ name: '', startDate: '', endDate: '' });
+                setSprintErrors({ name: '', startDate: '', endDate: '' });
+            } catch (error) {
+                console.error("Error creating sprint:", error);
+            }
         }
     };
+
+    if (!projectData) {
+        return (
+            <div style={{
+                minHeight: '100vh',
+                background: '#F5F5F9',
+                display: 'flex',
+                justifyContent: 'center',
+                alignItems: 'center',
+                fontFamily: "'Poppins', sans-serif"
+            }}>
+                <div>Project not found</div>
+            </div>
+        );
+    }
 
     return (
         <div style={{
@@ -371,18 +398,19 @@ const ProjectScreen = () => {
                         <img
                             src={logo}
                             alt="Logo"
-                            style={{ width: '32px', height: '32px' }}
+                            style={{ width: '32px', height: '32px', cursor: 'pointer' }}
+                            onClick={() => navigate('/')}
                         />
                         <motion.div
                             whileHover={{ scale: 1.05 }}
                             style={{
-                                color: colors.primary,
+                                color: colors.text,
                                 fontWeight: '700',
-                                fontSize: '24px',
+                                fontSize: '20px',
                                 cursor: 'pointer'
                             }}
                         >
-                            Taktik
+                            {projectData.name}
                         </motion.div>
                     </div>
 
@@ -609,7 +637,7 @@ const ProjectScreen = () => {
                                             {/* Lista de historias existentes */}
                                             {userStories.map(story => (
                                                 <motion.div
-                                                    key={story.id}
+                                                    key={story.publicId}
                                                     whileHover={{ y: -2 }}
                                                     onClick={() => handleStoryClick(story)}
                                                     style={{
@@ -631,7 +659,7 @@ const ProjectScreen = () => {
                                                     </div>
 
                                                     <AnimatePresence>
-                                                        {selectedStory === story.id && (
+                                                        {selectedStory === story.publicId && (
                                                             <motion.div
                                                                 initial={{ opacity: 0, height: 0 }}
                                                                 animate={{ opacity: 1, height: 'auto' }}
@@ -865,7 +893,7 @@ const ProjectScreen = () => {
                                             {/* Lista de sprints existentes */}
                                             {(sprints || []).map(sprint => (
                                                 <motion.div
-                                                    key={sprint.id}
+                                                    key={sprint.publicId}
                                                     whileHover={{ y: -2 }}
                                                     onClick={() => handleSprintClick(sprint)}
                                                     style={{
@@ -887,7 +915,7 @@ const ProjectScreen = () => {
                                                     </div>
 
                                                     <AnimatePresence>
-                                                        {selectedSprint === sprint.id && (
+                                                        {selectedSprint === sprint.publicId && (
                                                             <motion.div
                                                                 initial={{ opacity: 0, height: 0 }}
                                                                 animate={{ opacity: 1, height: 'auto' }}
@@ -906,7 +934,7 @@ const ProjectScreen = () => {
                                                                     fontSize: '14px',
                                                                     marginTop: '8px'
                                                                 }}>
-                                                                    {new Date(sprint.startDate).toLocaleDateString()} - {new Date(sprint.endDate).toLocaleDateString()}
+                                                                    {new Date(sprint.start).toLocaleDateString()} - {new Date(sprint.end).toLocaleDateString()}
                                                                 </div>
 
                                                                 <div style={{
@@ -1369,34 +1397,6 @@ const ProjectScreen = () => {
                                                 marginBottom: '8px',
                                                 color: '#2E2E48',
                                                 fontWeight: '500'
-                                            }}>Nombre*</label>
-                                            <input
-                                                type="text"
-                                                value={newMember.name}
-                                                onChange={(e) => setNewMember({ ...newMember, name: e.target.value })}
-                                                style={{
-                                                    width: '92%',
-                                                    padding: '12px',
-                                                    borderRadius: '8px',
-                                                    border: errors.name ? `1px solid ${colors.error}` : '1px solid #E5E5ED',
-                                                    fontSize: '14px'
-                                                }}
-                                            />
-                                            {errors.name && (
-                                                <div style={{
-                                                    color: colors.error,
-                                                    fontSize: '12px',
-                                                    marginTop: '4px'
-                                                }}>{errors.name}</div>
-                                            )}
-                                        </div>
-
-                                        <div style={{ marginBottom: '16px' }}>
-                                            <label style={{
-                                                display: 'block',
-                                                marginBottom: '8px',
-                                                color: '#2E2E48',
-                                                fontWeight: '500'
                                             }}>Rol*</label>
                                             <select
                                                 value={newMember.role}
@@ -1416,10 +1416,10 @@ const ProjectScreen = () => {
                                                 }}
                                             >
                                                 <option value="" style={{ borderRadius: "8px" }}>Seleccionar rol</option>
-                                                <option value="Stakeholder">Stakeholder</option>
-                                                <option value="Product Owner">Product Owner</option>
-                                                <option value="Scrum Master">Scrum Master</option>
-                                                <option value="Developer">Developer</option>
+                                                <option value="STAKEHOLDER">Stakeholder</option>
+                                                <option value="PRODUCT_OWNER">Product Owner</option>
+                                                <option value="SCRUM_MASTER">Scrum Master</option>
+                                                <option value="TEAM_MEMBER">Team Member</option>
                                             </select>
                                             {errors.role && (
                                                 <div style={{
@@ -1489,22 +1489,18 @@ const ProjectScreen = () => {
                                                 whileTap={{ scale: 0.98 }}
                                                 onClick={() => {
                                                     if (validateFields()) {
-                                                        // Persistencia: Añadir nuevo miembro
-                                                        const newId = Math.max(...members.map(m => m.id)) + 1;
                                                         setMembers([
                                                             ...members,
                                                             {
-                                                                id: newId,
-                                                                name: newMember.name,
-                                                                role: newMember.role,
-                                                                email: newMember.email
+                                                                publicId: "",
+                                                                projectRol: newMember.role,
+                                                                userEmail: newMember.email
                                                             }
                                                         ]);
 
-                                                        // Cerrar modal y resetear formulario
                                                         setShowMemberModal(false);
-                                                        setNewMember({ name: '', role: '', email: '' });
-                                                        setErrors({ name: '', role: '', email: '' });
+                                                        setNewMember({ projectRol: '', userEmail: '' });
+                                                        setErrors({ projectRol: '', userEmail: '' });
                                                     }
                                                 }}
                                                 style={{
@@ -1525,7 +1521,7 @@ const ProjectScreen = () => {
                             )}
 
                             {members.map(member => (
-                                <div key={member.id} style={{
+                                <div key={member.publicId} style={{
                                     display: 'flex',
                                     alignItems: 'center',
                                     gap: '12px',
@@ -1542,7 +1538,7 @@ const ProjectScreen = () => {
                                         color: colors.secondary,
                                         fontWeight: '600'
                                     }}>
-                                        {member.name.charAt(0)}
+                                        {member.userEmail.charAt(0).toUpperCase()}
                                     </div>
                                     <div>
                                         <div style={{
@@ -1550,11 +1546,11 @@ const ProjectScreen = () => {
                                             color: colors.text,
                                             fontSize: '14px',
                                             marginBottom: '3px'
-                                        }}>{member.name}</div>
+                                        }}>{member.userEmail}</div>
                                         <div style={{
                                             color: colors.lightText,
                                             fontSize: '12px'
-                                        }}>{member.role}</div>
+                                        }}>{member.projectRol}</div>
                                     </div>
                                 </div>
                             ))}
@@ -2140,7 +2136,7 @@ const ProjectScreen = () => {
                         {currentStory?.tasks.length > 0 ? (
                             <div style={{ marginBottom: '20px' }}>
                                 {currentStory.tasks.map(task => (
-                                    <div key={task.id} style={{
+                                    <div key={task.publicId} style={{
                                         display: 'flex',
                                         alignItems: 'center',
                                         gap: '12px',
@@ -2153,7 +2149,7 @@ const ProjectScreen = () => {
                                         <input
                                             type="checkbox"
                                             checked={task.completed || false}
-                                            onChange={() => toggleTaskCompletion(currentStory.id, task.id)}
+                                            onChange={() => toggleTaskCompletion(currentStory.publicId, task.publicId)}
                                             style={{
                                                 width: '18px',
                                                 height: '18px',

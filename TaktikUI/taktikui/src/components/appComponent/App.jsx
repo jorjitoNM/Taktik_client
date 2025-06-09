@@ -10,7 +10,7 @@ function App() {
           {/* <Route path="/login" element={<LoginScreen />} /> */}
           {/* <Route path="/register" element={<RegisterScreen />} /> */}
           {/* <Route path="/" element={<HomeScreen />} /> */}
-          <Route path="/project" element={<ProjectScreen />} />
+          <Route path="/project/:projectId" element={<ProjectScreen />} />
         </Routes>
     </Router>
   );
