@@ -1,4 +1,7 @@
-import HomeScreen from '../homeComponent/HomeScreen';
+
+  import './App.css';
+import ProjectScreen from '../projectComponent/ProjectScreen';
+  import HomeScreen from '../homeComponent/HomeScreen';
 import { BrowserRouter as Router, Routes, Route } from 'react-router-dom';
 
 function App() {
@@ -7,6 +10,7 @@ function App() {
         <Routes>
           {/* <Route path="/login" element={<LoginScreen />} /> */}
           {/* <Route path="/register" element={<RegisterScreen />} /> */}
+<Route path="/project/:projectId" element={<ProjectScreen />} />
           <Route path="/" element={<HomeScreen />} />
         </Routes>
     </Router>
