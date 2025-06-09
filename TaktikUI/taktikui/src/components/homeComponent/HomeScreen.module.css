@@ -1,0 +1,7 @@
+.project-creation-field {
+    border: 1px solid #E5E5ED;
+}
+
+.project-creation-field:focus {
+  border: 1.5px solid #673DE6;
+}

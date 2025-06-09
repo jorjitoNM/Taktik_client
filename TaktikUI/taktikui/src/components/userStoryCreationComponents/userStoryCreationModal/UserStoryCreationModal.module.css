@@ -1,0 +1,9 @@
+dialog::backdrop {
+    background-color: rgba(0, 0, 0, 0.6);
+}
+
+.user-story-creation-label {
+    font-weight: bold;
+    font-size: 20px;
+    align-self: left;
+}
