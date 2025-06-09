@@ -2,6 +2,7 @@
 import './App.css';
 import ProjectScreen from '../projectComponent/ProjectScreen';
 import HomeScreen from '../homeComponent/HomeScreen';
+import LoginScreen from '../loginComponent/LoginScreen';
 import { BrowserRouter as Router, Routes, Route } from 'react-router-dom';
 
 function App() {
@@ -9,7 +10,6 @@ function App() {
     <Router>
       <Routes>
         <Route path="/login" element={<LoginScreen />} />
-        <Route path="/register" element={<RegisterScreen />} />
         <Route path="/projects/:projectId" element={<ProjectScreen />} />
         <Route path="/" element={<HomeScreen />} />
       </Routes>
