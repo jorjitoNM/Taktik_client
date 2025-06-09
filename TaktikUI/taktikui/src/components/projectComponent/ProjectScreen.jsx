@@ -740,7 +740,7 @@ const ProjectScreen = () => {
                                                                                 viewBox="0 0 21 21"
                                                                                 width="1.35em"
                                                                                 height="1.35em"
-                                                                                style={{ paddingRight: '1px' }}
+                                                                                style={{ paddingRight: '1px', marginBottom: '3px' }}
                                                                             >
                                                                                 <path
                                                                                     fill="currentColor"
@@ -773,7 +773,7 @@ const ProjectScreen = () => {
                                                                                 viewBox="0 0 24 24"
                                                                                 width="1.3em"
                                                                                 height="1.3em"
-                                                                                style={{ marginTop: "1.5px" }}
+                                                                                style={{ marginTop: "1.5px", marginBottom: '2px' }}
                                                                             >
                                                                                 <path
                                                                                     fill="currentColor"
@@ -812,8 +812,8 @@ const ProjectScreen = () => {
                                                 <svg
                                                     xmlns="http://www.w3.org/2000/svg"
                                                     viewBox="0 0 16 16"
-                                                    width="3em"
-                                                    height="3em"
+                                                    width="6em"
+                                                    height="6em"
                                                     style={{ padding: '1.4rem' }}
                                                 >
                                                     <path
@@ -962,7 +962,7 @@ const ProjectScreen = () => {
                                                                                 viewBox="0 0 21 21"
                                                                                 width="1.35em"
                                                                                 height="1.35em"
-                                                                                style={{ paddingRight: '1px' }}
+                                                                                style={{ paddingRight: '1px', marginBottom: '3px' }}
                                                                             >
                                                                                 <path
                                                                                     fill="currentColor"
@@ -995,7 +995,7 @@ const ProjectScreen = () => {
                                                                                 viewBox="0 0 24 24"
                                                                                 width="1.3em"
                                                                                 height="1.3em"
-                                                                                style={{ marginTop: "1.5px" }}
+                                                                                style={{ marginTop: "1.5px", marginBottom: '2px' }}
                                                                             >
                                                                                 <path
                                                                                     fill="currentColor"
@@ -1033,8 +1033,8 @@ const ProjectScreen = () => {
                                                 <svg
                                                     xmlns="http://www.w3.org/2000/svg"
                                                     viewBox="0 0 14 14"
-                                                    width="3em"
-                                                    height="3em"
+                                                    width="6em"
+                                                    height="6em"
                                                     style={{ color: colors.secondary, padding: "1.4rem" }}
                                                 >
                                                     <path
