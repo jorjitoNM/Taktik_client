@@ -494,6 +494,7 @@ const ProjectScreen = () => {
                                     <motion.button
                                         whileHover={{ background: colors.light }}
                                         transition={{ type: 'tween', duration: 0.2 }}
+                                        onClick={ () => navigate("/login")}
                                         style={{
                                             width: '100%',
                                             textAlign: 'left',

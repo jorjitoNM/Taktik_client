@@ -404,7 +404,7 @@ function PantallaInicio() {
         // Login exitoso - Redirigir a PantallaPrincipal
         console.log("Iniciando sesión...");
         setTimeout(() => {
-          navigate('/principal', { state: { user: formData.email } });
+          navigate('/', { state: { user: formData.email } });
         }, 1000);
       }
     }
